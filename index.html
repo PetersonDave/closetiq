@@ -308,7 +308,7 @@ section + section { padding-top: 0; }
   <!-- API Key setup -->
   <div class="api-setup" id="apiSetup">
     <h2>Connect AI stylist</h2>
-    <p>ClosetIQ uses Google Gemini to analyze your wardrobe and suggest outfits. The free tier is generous — no credit card required.</p>
+    <p>ClosetIQ uses Google Gemini to analyze your wardrobe and suggest outfits. The free tier requires no credit card.</p>
     <p><a href="https://aistudio.google.com/apikey" target="_blank">Get your free Gemini API key →</a></p>
     <div class="api-input-row">
       <input class="api-input" id="apiKeyInput" type="password" placeholder="AIza…" autocomplete="off" autocorrect="off" spellcheck="false">
@@ -698,33 +698,34 @@ async function getSuggestion() {
 
 ${wxCtx}
 
-The images above show their wardrobe (${state.garments.length} items total).
-Item names: ${itemList}
+The user's wardrobe contains ONLY the following ${state.garments.length} items. Each image above corresponds to one item in this numbered list:
+${itemList}
 
-Instructions:
-1. Pick a specific, complete outfit from the items shown — name each piece
-2. Explain why it suits the occasion and weather in 2–3 sentences
-3. Give one practical styling tip (tucking, layering, accessories, etc.)
+STRICT RULES — you must follow all of these:
+1. ONLY recommend items that appear in the numbered list above. Every item you suggest must be referenced by its exact name from the list.
+2. Examine each image carefully — identify the actual color, fabric, and style of each piece before making selections.
+3. Do NOT suggest, invent, or imply any clothing item that is not in the list. This includes accessories, shoes, belts, undershirts, or outerwear unless they explicitly appear in the list.
+4. If a standard outfit category is completely absent from the wardrobe (e.g. no shoes at all, no pants at all), you may add ONE short sentence suggesting a generic, non-specific substitute — for example "any neutral sneaker would complete the look" — and clearly note it is not in their wardrobe.
+5. Never suggest a specific brand, style name, or color for a gap-fill item. Keep it generic.
 
-Keep it warm, direct, and under 180 words. 
-First line: a short punchy outfit title (no label prefix, just the title itself).
-Then a blank line.
-Then the rest.`;
+Output format (follow exactly):
+Line 1: A short, punchy outfit title — no label, just the title itself
+Line 2: blank
+Line 3+: 2–3 sentences naming which specific wardrobe items to wear and why they suit the occasion and weather
+If gap-fill needed: 1 sentence maximum
+Final sentence: one practical styling tip (tucking, rolling sleeves, layering order, etc.)
+
+Total response: under 200 words.`;
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              ...imageBlocks,
-              { text: promptText }
-            ]
-          }],
-          generationConfig: { maxOutputTokens: 600 }
+          contents: [{ parts: [...imageBlocks, { text: promptText }] }],
+          generationConfig: { maxOutputTokens: 700 }
         })
       }
     );
@@ -736,7 +737,7 @@ Then the rest.`;
 
     const data = await res.json();
     const full = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!full) throw new Error('No response from Gemini');
+    if (!full) throw new Error('No response received');
 
     const nl = full.indexOf('\n');
     if (nl !== -1) {
