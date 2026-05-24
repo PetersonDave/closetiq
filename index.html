@@ -308,13 +308,13 @@ section + section { padding-top: 0; }
   <!-- API Key setup -->
   <div class="api-setup" id="apiSetup">
     <h2>Connect AI stylist</h2>
-    <p>ClosetIQ uses Google Gemini to analyze your wardrobe and suggest outfits. The free tier requires no credit card.</p>
-    <p><a href="https://aistudio.google.com/apikey" target="_blank">Get your free Gemini API key →</a></p>
+    <p>ClosetIQ uses Claude to analyze your wardrobe and suggest outfits. You'll need an Anthropic API key — takes about 2 minutes to set up.</p>
+    <p><a href="https://console.anthropic.com/settings/keys" target="_blank">Get your API key →</a></p>
     <div class="api-input-row">
-      <input class="api-input" id="apiKeyInput" type="password" placeholder="AIza…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <input class="api-input" id="apiKeyInput" type="password" placeholder="sk-ant-…" autocomplete="off" autocorrect="off" spellcheck="false">
       <button class="api-save-btn" onclick="saveApiKey()">Save</button>
     </div>
-    <p class="api-note">Your key is stored only on this device in localStorage. It is never sent anywhere except directly to generativelanguage.googleapis.com.</p>
+    <p class="api-note">Your key is stored only on this device in localStorage. It is never sent anywhere except directly to api.anthropic.com.</p>
   </div>
   <div id="apiSavedRow" style="display:none; padding: 0 20px 16px;">
     <div class="api-saved-row">
@@ -452,7 +452,7 @@ function loadApiKey() {
 }
 function saveApiKey() {
   const val = document.getElementById('apiKeyInput').value.trim();
-  if (!val.startsWith('AIza')) { showToast('That doesn\'t look like a valid Gemini key'); return; }
+  if (!val.startsWith('sk-ant-')) { showToast('That doesn\'t look like a valid key'); return; }
   state.apiKey = val;
   localStorage.setItem(LS_KEY_APIKEY, val);
   document.getElementById('apiSetup').style.display = 'none';
@@ -690,7 +690,7 @@ async function getSuggestion() {
     const b64       = g.src.split(',')[1] ?? g.src;
     const mediaType = g.src.startsWith('data:image/png')  ? 'image/png'  :
                       g.src.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg';
-    return { inline_data: { mime_type: mediaType, data: b64 } };
+    return { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } };
   });
 
   const todCtx = state.tod ? ` (${state.tod.toLowerCase()})` : '';
@@ -718,33 +718,55 @@ Final sentence: one practical styling tip (tucking, rolling sleeves, layering or
 Total response: under 200 words.`;
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [...imageBlocks, { text: promptText }] }],
-          generationConfig: { maxOutputTokens: 700 }
-        })
-      }
-    );
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 700,
+        stream: true,
+        messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: promptText }] }]
+      })
+    });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
 
-    const data = await res.json();
-    const full = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!full) throw new Error('No response received');
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let full = '', titleParsed = false;
 
-    const nl = full.indexOf('\n');
-    if (nl !== -1) {
-      rTitle.textContent = full.slice(0, nl).trim();
-      rBody.textContent  = full.slice(nl).trimStart();
-    } else {
-      rTitle.textContent = full;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      for (const line of decoder.decode(value).split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6);
+        if (raw === '[DONE]') continue;
+        try {
+          const p = JSON.parse(raw);
+          if (p.type === 'content_block_delta' && p.delta?.text) {
+            full += p.delta.text;
+            const nl = full.indexOf('\n');
+            if (!titleParsed && nl !== -1) {
+              rTitle.textContent = full.slice(0, nl).trim();
+              rBody.textContent  = full.slice(nl).trimStart();
+              titleParsed = true;
+            } else if (titleParsed) {
+              rBody.textContent = full.slice(full.indexOf('\n')).trimStart();
+            } else {
+              rTitle.textContent = full;
+            }
+          }
+        } catch {}
+      }
     }
 
     if (state.weather) {
