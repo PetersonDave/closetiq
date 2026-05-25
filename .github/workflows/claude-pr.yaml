@@ -23,32 +23,48 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Call Claude API
+      - name: Read repo files
+        id: read_files
+        run: |
+          echo "INDEX_HTML<<EOF" >> $GITHUB_OUTPUT
+          cat index.html >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Call Claude API and apply changes
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
+          INDEX_HTML: ${{ steps.read_files.outputs.INDEX_HTML }}
         run: |
           sudo apt-get update && sudo apt-get install -y jq
-      
+
+          SYSTEM_PROMPT="You are a senior engineer. You will be given the contents of index.html and a GitHub issue. Respond ONLY with the complete updated index.html content, no explanation, no markdown fences, no preamble."
+
           JSON=$(jq -n \
+            --arg system "$SYSTEM_PROMPT" \
             --arg title "$ISSUE_TITLE" \
             --arg body "$ISSUE_BODY" \
+            --arg html "$INDEX_HTML" \
             '{
-              model: "claude-4-0-sonnet-latest",
-              max_tokens: 2000,
+              model: "claude-sonnet-4-6",
+              max_tokens: 4096,
+              system: $system,
               messages: [{
                 role: "user",
-                content: ("Implement this GitHub issue.\n\nTitle: " + $title + "\n\nBody: " + $body)
+                content: ("Here is the current index.html:\n\n" + $html + "\n\nGitHub Issue Title: " + $title + "\n\nIssue Body: " + $body + "\n\nReturn the complete updated index.html.")
               }]
             }')
 
-          curl https://api.anthropic.com/v1/messages \
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
-            -d "$JSON"
-      
+            -d "$JSON")
+
+          # Extract the text content from the response
+          echo "$RESPONSE" | jq -r '.content[0].text' > index.html
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
