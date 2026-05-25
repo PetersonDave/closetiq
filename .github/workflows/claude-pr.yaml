@@ -23,12 +23,6 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Debug PATH
-        run: |   
-          npm bin -g
-          echo $PATH
-          which claude-code || true
-
       - name: Call Claude API
         run: |
           curl https://api.anthropic.com/v1/messages \
