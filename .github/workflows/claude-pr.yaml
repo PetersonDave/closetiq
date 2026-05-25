@@ -35,7 +35,7 @@ jobs:
             --arg title "$ISSUE_TITLE" \
             --arg body "$ISSUE_BODY" \
             '{
-              model: "claude-sonnet-4-20250514",
+              model: "claude-4-0-sonnet-latest",
               max_tokens: 2000,
               messages: [{
                 role: "user",
