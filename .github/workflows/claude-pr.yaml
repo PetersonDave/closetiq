@@ -1,0 +1,39 @@
+name: Claude PR Generator
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+jobs:
+  create-pr:
+    if: contains(github.event.issue.labels.*.name, 'claude')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Claude SDK
+        run: npm install @anthropic-ai/sdk
+
+      - name: Generate code with Claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          node .github/scripts/claude-pr.js
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: claude/${{ github.event.issue.number }}
+          title: "AI: ${{ github.event.issue.title }}"
+          body: |
+            Auto-generated from issue #${{ github.event.issue.number }}
+           draft: true
