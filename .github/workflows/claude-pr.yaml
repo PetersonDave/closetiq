@@ -2,7 +2,9 @@ name: Claude PR Generator
 
 on:
   issues:
-    types: [opened, labeled]
+    types:
+      - opened
+      - labeled
 
 permissions:
   contents: write
@@ -15,19 +17,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Install Claude SDK
-        run: npm install @anthropic-ai/sdk
-
-      - name: Generate code with Claude
+      - name: Run Claude
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
-          node .github/scripts/claude-pr.js
+          claude-code --dangerously-skip-permissions "
+          Read the repository and implement this issue.
+
+          Title:
+          ${ISSUE_TITLE}
+
+          Description:
+          ${ISSUE_BODY}
+
+          Rules:
+          - Follow the existing coding style
+          - Keep changes minimal
+          - Do not rewrite unrelated code
+          - Use vanilla JavaScript only
+          - Do not add frameworks
+          "
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
@@ -36,4 +50,4 @@ jobs:
           title: "AI: ${{ github.event.issue.title }}"
           body: |
             Auto-generated from issue #${{ github.event.issue.number }}
-           draft: true
+          draft: true
