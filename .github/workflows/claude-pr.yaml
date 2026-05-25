@@ -24,20 +24,31 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Call Claude API
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
+          sudo apt-get update && sudo apt-get install -y jq
+      
+          JSON=$(jq -n \
+            --arg title "$ISSUE_TITLE" \
+            --arg body "$ISSUE_BODY" \
+            '{
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 2000,
+              messages: [{
+                role: "user",
+                content: ("Implement this GitHub issue.\n\nTitle: " + $title + "\n\nBody: " + $body)
+              }]
+            }')
+
           curl https://api.anthropic.com/v1/messages \
-            -H "x-api-key: ${{ secrets.ANTHROPIC_API_KEY }}" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
-            -d "{
-              \"model\": \"claude-sonnet-4-20250514\",
-              \"max_tokens\": 2000,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Implement this issue:\\nTitle: ${{ github.event.issue.title }}\\nBody: ${{ github.event.issue.body }}\"
-              }]
-            }"
-
+            -d "$JSON"
+      
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
