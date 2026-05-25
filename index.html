@@ -39,18 +39,14 @@ body {
   font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100vh; min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 .app {
-  max-width: 430px;
-  margin: 0 auto;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  max-width: 430px; margin: 0 auto;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
   padding-bottom: calc(80px + var(--safe-bottom));
 }
 
@@ -58,13 +54,8 @@ body {
 header {
   padding: calc(16px + var(--safe-top)) 20px 14px;
   border-bottom: 0.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: var(--bg); z-index: 100;
 }
 .logo { font-family: var(--font-serif); font-size: 22px; color: var(--accent-text); letter-spacing: -0.3px; }
 .logo em { font-style: italic; color: var(--text-muted); }
@@ -75,7 +66,7 @@ header {
   font-size: 13px; color: var(--text-muted); cursor: pointer;
   transition: border-color 0.2s; -webkit-tap-highlight-color: transparent;
 }
-.weather-chip:hover, .weather-chip:active { border-color: var(--border-hover); }
+.weather-chip:active { border-color: var(--border-hover); }
 .weather-chip .temp { color: var(--text); font-weight: 500; }
 
 /* Sections */
@@ -119,8 +110,7 @@ section + section { padding-top: 0; }
   border: 0.5px dashed var(--border-hover); border-radius: var(--radius);
   padding: 28px 20px; text-align: center; cursor: pointer;
   transition: all 0.2s; background: var(--surface);
-  position: relative; overflow: hidden;
-  -webkit-tap-highlight-color: transparent;
+  position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent;
 }
 .upload-zone:active { background: var(--accent-dim); border-color: var(--accent); }
 .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; font-size: 0; }
@@ -136,9 +126,9 @@ section + section { padding-top: 0; }
 .garment-card {
   aspect-ratio: 3/4; border-radius: var(--radius-sm);
   overflow: hidden; position: relative;
-  border: 0.5px solid var(--border); cursor: pointer;
-  transition: border-color 0.15s;
+  border: 0.5px solid var(--border); cursor: pointer; transition: border-color 0.15s;
 }
+.garment-card:active { border-color: var(--accent); }
 .garment-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .garment-card .remove-btn {
   position: absolute; top: 4px; right: 4px;
@@ -146,15 +136,29 @@ section + section { padding-top: 0; }
   background: rgba(0,0,0,0.72); border: none; border-radius: 50%;
   color: #fff; font-size: 12px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; z-index: 2;
 }
 .garment-label {
   position: absolute; bottom: 0; left: 0; right: 0;
-  background: linear-gradient(transparent, rgba(0,0,0,0.75));
-  padding: 16px 5px 5px; font-size: 9px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.82));
+  padding: 18px 5px 5px; font-size: 9px;
   color: rgba(255,255,255,0.65); text-align: center;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   padding-left: 6px; padding-right: 6px;
+}
+.garment-category-badge {
+  position: absolute; top: 4px; left: 4px;
+  background: rgba(0,0,0,0.65); border-radius: 4px;
+  padding: 2px 5px; font-size: 9px; color: var(--accent-text);
+  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;
+}
+.garment-card.analyzing .garment-category-badge { color: var(--text-dim); }
+.garment-card .edit-icon {
+  position: absolute; bottom: 20px; right: 4px;
+  width: 20px; height: 20px; font-size: 11px;
+  background: rgba(0,0,0,0.65); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
 }
 
 /* Badges / status */
@@ -189,10 +193,7 @@ section + section { padding-top: 0; }
 .cta-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* Result */
-.result-card {
-  background: var(--surface); border: 0.5px solid var(--border);
-  border-radius: var(--radius); padding: 20px;
-}
+.result-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 20px; }
 .result-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 .result-title { font-family: var(--font-serif); font-size: 20px; line-height: 1.3; color: var(--accent-text); flex: 1; }
 .weather-badge {
@@ -202,11 +203,7 @@ section + section { padding-top: 0; }
 }
 .result-body { font-size: 14px; color: var(--text-muted); line-height: 1.75; white-space: pre-wrap; }
 .piece-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
-.piece-tag {
-  font-size: 11px; background: var(--surface2);
-  border: 0.5px solid var(--border); border-radius: 20px;
-  padding: 4px 10px; color: var(--text-muted);
-}
+.piece-tag { font-size: 11px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 10px; color: var(--text-muted); }
 
 /* Spinner */
 .spinner {
@@ -238,17 +235,10 @@ section + section { padding-top: 0; }
 }
 .install-banner-text { flex: 1; font-size: 13px; color: var(--text-muted); line-height: 1.4; }
 .install-banner-text strong { color: var(--text); font-weight: 500; display: block; margin-bottom: 2px; font-size: 13px; }
-.install-dismiss {
-  background: none; border: none; color: var(--text-dim);
-  font-size: 18px; cursor: pointer; padding: 0 2px; flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-}
+.install-dismiss { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; padding: 0 2px; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
 
 /* API key setup */
-.api-setup {
-  margin: 20px; background: var(--surface);
-  border: 0.5px solid var(--border); border-radius: var(--radius); padding: 20px;
-}
+.api-setup { margin: 20px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 20px; }
 .api-setup h2 { font-family: var(--font-serif); font-size: 18px; color: var(--accent-text); margin-bottom: 8px; }
 .api-setup p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
 .api-setup a { color: var(--accent); text-decoration: none; }
@@ -270,16 +260,68 @@ section + section { padding-top: 0; }
 .api-note { font-size: 11px; color: var(--text-dim); margin-top: 10px; line-height: 1.5; }
 .api-saved-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
 .api-saved-label { font-size: 12px; color: var(--success); }
-.api-change-btn {
-  background: none; border: none; color: var(--text-dim); font-size: 11px;
-  font-family: var(--font-sans); cursor: pointer;
-  text-decoration: underline; text-underline-offset: 2px;
-  -webkit-tap-highlight-color: transparent;
-}
+.api-change-btn { background: none; border: none; color: var(--text-dim); font-size: 11px; font-family: var(--font-sans); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; -webkit-tap-highlight-color: transparent; }
 
 /* Skeleton */
 .skeleton-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
 .skeleton { aspect-ratio: 3/4; border-radius: var(--radius-sm); background: var(--surface2); animation: pulse 1.5s ease-in-out infinite; }
+
+/* ── Metadata modal ── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 300; display: flex; align-items: flex-end;
+  opacity: 0; transition: opacity 0.2s; pointer-events: none;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  width: 100%; max-width: 430px; margin: 0 auto;
+  background: var(--surface); border-radius: var(--radius) var(--radius) 0 0;
+  padding: 0 0 calc(24px + var(--safe-bottom));
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(.32,.72,0,1);
+  max-height: 90dvh; overflow-y: auto;
+}
+.modal-backdrop.open .modal-sheet { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; background: var(--border-hover); border-radius: 2px; margin: 12px auto 0; }
+.modal-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px 14px; border-bottom: 0.5px solid var(--border); }
+.modal-thumb { width: 52px; height: 68px; border-radius: 6px; object-fit: cover; flex-shrink: 0; border: 0.5px solid var(--border); }
+.modal-title { font-family: var(--font-serif); font-size: 17px; color: var(--accent-text); }
+.modal-subtitle { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+.field-label { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
+.field-select, .field-input {
+  width: 100%; background: var(--surface2); border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  color: var(--text); font-family: var(--font-sans); font-size: 14px;
+  outline: none; appearance: none; -webkit-appearance: none;
+  transition: border-color 0.2s;
+}
+.field-select:focus, .field-input:focus { border-color: var(--accent); }
+.field-select option { background: #252320; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-actions { display: flex; gap: 10px; padding: 0 20px; margin-top: 4px; }
+.modal-save-btn {
+  flex: 1; padding: 13px; background: var(--accent); color: #0f0e0d;
+  border: none; border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-size: 14px; font-weight: 500;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.modal-delete-btn {
+  padding: 13px 16px; background: rgba(224,90,90,0.1); color: var(--danger);
+  border: 0.5px solid rgba(224,90,90,0.25); border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-size: 14px;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.analyzing-banner {
+  background: var(--accent-dim); border: 0.5px solid rgba(201,169,110,0.2);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  font-size: 12px; color: var(--accent-text);
+  display: flex; align-items: center; gap: 8px; margin: 0 20px;
+}
+.analyzing-spinner {
+  width: 12px; height: 12px; border: 1.5px solid rgba(201,169,110,0.3);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.7s linear infinite; flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -293,7 +335,6 @@ section + section { padding-top: 0; }
     </div>
   </header>
 
-  <!-- Install prompt (shown only in browser, not when installed) -->
   <div id="installBanner" style="display:none; margin-top:16px;">
     <div class="install-banner">
       <span style="font-size:24px;">📲</span>
@@ -366,6 +407,11 @@ section + section { padding-top: 0; }
       </div>
     </div>
 
+    <div id="analyzingBanner" style="display:none;" class="analyzing-banner">
+      <div class="analyzing-spinner"></div>
+      <span id="analyzingText">Analyzing items…</span>
+    </div>
+
     <div id="uploadZoneWrap">
       <div class="upload-zone">
         <input type="file" id="fileInput" accept="image/*" multiple onchange="handleUpload(event)">
@@ -388,13 +434,7 @@ section + section { padding-top: 0; }
     </div>
 
     <div class="wardrobe-grid" id="wardrobeGrid"></div>
-
-  </section>
-
-  <!-- Generate button -->
-  <section>
-    <div class="divider"></div>
-    <button class="cta-btn" id="suggestBtn" onclick="getSuggestion()" disabled>Suggest an outfit</button>
+    <p style="font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;" id="tapHint" style="display:none;">Tap any item to edit its details</p>
   </section>
 
   <!-- Result -->
@@ -413,35 +453,100 @@ section + section { padding-top: 0; }
 
 <div class="toast" id="toast"></div>
 
+<!-- Metadata editor modal -->
+<div class="modal-backdrop" id="metaModal" onclick="handleModalBackdropClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <img class="modal-thumb" id="modalThumb" src="" alt="">
+      <div>
+        <div class="modal-title" id="modalTitle">Edit item</div>
+        <div class="modal-subtitle">Tap fields to correct AI-generated tags</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="field-label">Name</div>
+        <input class="field-input" id="metaName" type="text" placeholder="e.g. Navy Oxford Shirt">
+      </div>
+      <div>
+        <div class="field-label">Category</div>
+        <select class="field-select" id="metaCategory">
+          <option value="">— select —</option>
+          <option value="top">Top (shirt, tee, sweater, jacket…)</option>
+          <option value="bottom">Bottom (pants, shorts, jeans, chinos…)</option>
+          <option value="shoes">Shoes</option>
+          <option value="outerwear">Outerwear (coat, blazer, vest…)</option>
+          <option value="belt">Belt</option>
+          <option value="accessory">Accessory (watch, hat, bag…)</option>
+          <option value="full-outfit">Full outfit (suit, jumpsuit…)</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div>
+          <div class="field-label">Primary color</div>
+          <input class="field-input" id="metaColor" type="text" placeholder="e.g. Navy blue">
+        </div>
+        <div>
+          <div class="field-label">Secondary color</div>
+          <input class="field-input" id="metaColor2" type="text" placeholder="e.g. White (optional)">
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <div class="field-label">Fabric / material</div>
+          <input class="field-input" id="metaFabric" type="text" placeholder="e.g. Cotton">
+        </div>
+        <div>
+          <div class="field-label">Fit / style</div>
+          <input class="field-input" id="metaStyle" type="text" placeholder="e.g. Slim fit">
+        </div>
+      </div>
+      <div>
+        <div class="field-label">Notes (optional)</div>
+        <input class="field-input" id="metaNotes" type="text" placeholder="e.g. Dressy, runs large, summer only">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-save-btn" onclick="saveMetadata()">Save</button>
+      <button class="modal-delete-btn" onclick="deleteFromModal()">Remove</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ─── Constants ───────────────────────────────────────────────
-const LS_KEY_WARDROBE  = 'closetiq_wardrobe_v2';
-const LS_KEY_APIKEY    = 'closetiq_apikey';
-const LS_KEY_INSTALL   = 'closetiq_install_dismissed';
+// ─── Constants ────────────────────────────────────────────────
+const LS_KEY_WARDROBE = 'closetiq_wardrobe_v3';
+const LS_KEY_APIKEY   = 'closetiq_apikey';
+const LS_KEY_INSTALL  = 'closetiq_install_dismissed';
 const MAX_IMAGES_TO_AI = 8;
 const COMPRESS_DIM     = 480;
 const COMPRESS_QUALITY = 0.72;
 
-// ─── State ───────────────────────────────────────────────────
-const state = {
-  occasion: null,
-  tod: null,
-  weather: null,
-  garments: [],   // { id, src (compressed dataURL), name }
-  loading: false,
-  apiKey: null,
-  saveTimer: null
+// garment shape: { id, src, name, category, color, color2, fabric, style, notes }
+const CATEGORIES = {
+  top:         'Top',
+  bottom:      'Bottom',
+  shoes:       'Shoes',
+  outerwear:   'Outerwear',
+  belt:        'Belt',
+  accessory:   'Accessory',
+  'full-outfit':'Full outfit',
+  other:       'Other'
 };
 
-// ─── Init ────────────────────────────────────────────────────
-function init() {
-  loadApiKey();
-  loadWardrobe();
-  showInstallPrompt();
-  fetchWeather();
-}
+// ─── State ────────────────────────────────────────────────────
+const state = {
+  occasion: null, tod: null, weather: null,
+  garments: [], loading: false, apiKey: null, saveTimer: null,
+  editingId: null, analyzingQueue: 0
+};
 
-// ─── API Key ─────────────────────────────────────────────────
+// ─── Init ─────────────────────────────────────────────────────
+function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); }
+
+// ─── API Key ──────────────────────────────────────────────────
 function loadApiKey() {
   const key = localStorage.getItem(LS_KEY_APIKEY);
   if (key) {
@@ -457,8 +562,7 @@ function saveApiKey() {
   localStorage.setItem(LS_KEY_APIKEY, val);
   document.getElementById('apiSetup').style.display = 'none';
   document.getElementById('apiSavedRow').style.display = 'block';
-  updateCTA();
-  showToast('API key saved');
+  updateCTA(); showToast('API key saved');
 }
 function changeApiKey() {
   document.getElementById('apiKeyInput').value = '';
@@ -470,10 +574,8 @@ function changeApiKey() {
 function showInstallPrompt() {
   const isStandalone = window.navigator.standalone === true ||
     window.matchMedia('(display-mode: standalone)').matches;
-  const dismissed = localStorage.getItem(LS_KEY_INSTALL);
-  if (!isStandalone && !dismissed) {
+  if (!isStandalone && !localStorage.getItem(LS_KEY_INSTALL))
     document.getElementById('installBanner').style.display = 'block';
-  }
 }
 function dismissInstall() {
   localStorage.setItem(LS_KEY_INSTALL, '1');
@@ -486,8 +588,7 @@ function loadWardrobe() {
     const raw = localStorage.getItem(LS_KEY_WARDROBE);
     state.garments = raw ? JSON.parse(raw) : [];
   } catch { state.garments = []; }
-  renderWardrobe();
-  updateCTA();
+  renderWardrobe(); updateCTA();
 }
 function persistWardrobe() {
   setStorageStatus('saving', 'Saving…');
@@ -503,42 +604,35 @@ function persistWardrobe() {
   }, 500);
 }
 function setStorageStatus(cls, label) {
-  const dot = document.getElementById('storageDot');
-  dot.className = 'storage-dot' + (cls ? ' ' + cls : '');
+  document.getElementById('storageDot').className = 'storage-dot' + (cls ? ' ' + cls : '');
   document.getElementById('storageLabel').textContent = label;
 }
 function confirmClear() {
   if (!confirm(`Remove all ${state.garments.length} items from your wardrobe?`)) return;
   state.garments = [];
   localStorage.removeItem(LS_KEY_WARDROBE);
-  renderWardrobe();
-  updateCTA();
+  renderWardrobe(); updateCTA();
   setStorageStatus('saved', '0 items');
   showToast('Wardrobe cleared');
 }
 
-// ─── Occasion ────────────────────────────────────────────────
+// ─── Occasion / ToD ───────────────────────────────────────────
 function selectOccasion(btn) {
   document.querySelectorAll('.occasion-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  state.occasion = btn.dataset.occasion;
-  updateCTA();
+  btn.classList.add('active'); state.occasion = btn.dataset.occasion; updateCTA();
 }
 function selectTod(btn) {
   document.querySelectorAll('.tod-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  state.tod = btn.dataset.tod;
+  btn.classList.add('active'); state.tod = btn.dataset.tod;
 }
-
-// ─── CTA state ───────────────────────────────────────────────
 function updateCTA() {
-  const btn = document.getElementById('suggestBtn');
-  btn.disabled = !state.occasion || state.garments.length < 2 || state.loading || !state.apiKey;
+  document.getElementById('suggestBtn').disabled =
+    !state.occasion || state.garments.length < 2 || state.loading || !state.apiKey;
 }
 
-// ─── Weather ─────────────────────────────────────────────────
+// ─── Weather ──────────────────────────────────────────────────
 function fetchWeather() {
-  const txt   = document.getElementById('weatherText');
+  const txt = document.getElementById('weatherText');
   const emoji = document.getElementById('weatherEmoji');
   txt.textContent = 'Locating…';
   if (!navigator.geolocation) { txt.textContent = 'No location'; return; }
@@ -548,38 +642,25 @@ function fetchWeather() {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=1`;
       const data = await (await fetch(url)).json();
       const c = data.current;
-      const temp  = Math.round(c.temperature_2m);
-      const feels = Math.round(c.apparent_temperature);
-      const cond  = wmoDesc(c.weather_code);
+      const temp = Math.round(c.temperature_2m), feels = Math.round(c.apparent_temperature);
+      const cond = wmoDesc(c.weather_code);
       state.weather = { temp, feels, cond, wind: Math.round(c.wind_speed_10m), humidity: c.relative_humidity_2m };
-      txt.textContent   = `${temp}°F · ${cond}`;
+      txt.textContent = `${temp}°F · ${cond}`;
       emoji.textContent = wmoEmoji(c.weather_code);
       showToast(`${temp}°F, feels like ${feels}°F — ${cond}`);
     } catch { txt.textContent = 'Unavailable'; }
   }, () => { txt.textContent = 'Tap to enable'; });
 }
 function wmoDesc(c) {
-  if (c===0) return 'Clear';
-  if (c<=2) return 'Partly cloudy';
-  if (c===3) return 'Overcast';
-  if (c<=49) return 'Foggy';
-  if (c<=57) return 'Drizzle';
-  if (c<=67) return 'Rainy';
-  if (c<=77) return 'Snowy';
-  if (c<=82) return 'Rain showers';
-  if (c<=99) return 'Thunderstorms';
+  if (c===0) return 'Clear'; if (c<=2) return 'Partly cloudy'; if (c===3) return 'Overcast';
+  if (c<=49) return 'Foggy'; if (c<=57) return 'Drizzle'; if (c<=67) return 'Rainy';
+  if (c<=77) return 'Snowy'; if (c<=82) return 'Rain showers'; if (c<=99) return 'Thunderstorms';
   return 'Mixed';
 }
 function wmoEmoji(c) {
-  if (c===0) return '☀️';
-  if (c<=2) return '⛅';
-  if (c===3) return '☁️';
-  if (c<=49) return '🌫️';
-  if (c<=67) return '🌧️';
-  if (c<=77) return '❄️';
-  if (c<=82) return '🌦️';
-  if (c<=99) return '⛈️';
-  return '🌤️';
+  if (c===0) return '☀️'; if (c<=2) return '⛅'; if (c===3) return '☁️';
+  if (c<=49) return '🌫️'; if (c<=67) return '🌧️'; if (c<=77) return '❄️';
+  if (c<=82) return '🌦️'; if (c<=99) return '⛈️'; return '🌤️';
 }
 
 // ─── Image compression ────────────────────────────────────────
@@ -588,8 +669,7 @@ function compressImage(dataUrl) {
     const img = new Image();
     img.onload = () => {
       const scale = Math.min(1, COMPRESS_DIM / Math.max(img.width, img.height));
-      const w = Math.round(img.width * scale);
-      const h = Math.round(img.height * scale);
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
       const c = document.createElement('canvas');
       c.width = w; c.height = h;
       c.getContext('2d').drawImage(img, 0, 0, w, h);
@@ -599,123 +679,22 @@ function compressImage(dataUrl) {
   });
 }
 
-// ─── Upload ───────────────────────────────────────────────────
-function handleUpload(e) {
-  const files = Array.from(e.target.files);
-  let done = 0;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      const src  = await compressImage(ev.target.result);
-      const name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
-      const id   = `${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
-      state.garments.push({ id, src, name });
-      if (++done === files.length) {
-        renderWardrobe();
-        updateCTA();
-        persistWardrobe();
-        showToast(`${files.length} item${files.length > 1 ? 's' : ''} added`);
-      }
-    };
-    reader.readAsDataURL(file);
-  });
-  e.target.value = '';
-}
+// ─── Auto-categorize via Claude ───────────────────────────────
+async function autoTag(garment) {
+  if (!state.apiKey) return;
+  state.analyzingQueue++;
+  updateAnalyzingBanner();
 
-function removeGarment(id) {
-  state.garments = state.garments.filter(g => g.id !== id);
-  renderWardrobe();
-  updateCTA();
-  persistWardrobe();
-}
-
-// ─── Render wardrobe ─────────────────────────────────────────
-function renderWardrobe() {
-  const grid      = document.getElementById('wardrobeGrid');
-  const badge     = document.getElementById('countBadge');
-  const uploadWrap= document.getElementById('uploadZoneWrap');
-  const addMore   = document.getElementById('addMoreWrap');
-  const clearBtn  = document.getElementById('clearBtn');
-  const n         = state.garments.length;
-
-  badge.textContent   = n;
-  badge.style.display = n > 0 ? 'inline-flex' : 'none';
-  uploadWrap.style.display = n === 0 ? 'block' : 'none';
-  addMore.style.display    = n > 0 ? 'block' : 'none';
-  clearBtn.style.display   = n > 0 ? 'inline' : 'none';
-
-  grid.innerHTML = state.garments.map(g => `
-    <div class="garment-card">
-      <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
-      <div class="garment-label">${escHtml(g.name)}</div>
-      <button class="remove-btn" onclick="removeGarment('${g.id}')" aria-label="Remove ${escHtml(g.name)}">×</button>
-    </div>
-  `).join('');
-
-  if (n === 0) setStorageStatus('saved', '0 items');
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ─── AI suggestion ────────────────────────────────────────────
-async function getSuggestion() {
-  if (state.loading || !state.apiKey) return;
-  state.loading = true;
-  updateCTA();
-
-  const btn = document.getElementById('suggestBtn');
-  btn.innerHTML = '<span class="spinner"></span>Styling your outfit…';
-
-  const rs    = document.getElementById('resultSection');
-  const rBody = document.getElementById('resultBody');
-  const rTitle= document.getElementById('resultTitle');
-  const rWx   = document.getElementById('resultWeather');
-  const rPieces = document.getElementById('resultPieces');
-
-  rs.style.display = 'block';
-  rTitle.textContent = 'Thinking…';
-  rBody.textContent  = '';
-  rWx.style.display  = 'none';
-  rPieces.innerHTML  = '';
-
-  const wxCtx = state.weather
-    ? `Current weather: ${state.weather.temp}°F (feels like ${state.weather.feels}°F), ${state.weather.cond}, wind ${state.weather.wind} mph, humidity ${state.weather.humidity}%.`
-    : 'No weather data available — assume mild, comfortable conditions around 72°F.';
-
-  const itemList = state.garments.map((g, i) => `Item ${i+1}: ${g.name}`).join('\n');
-
-  const imageBlocks = state.garments.slice(0, MAX_IMAGES_TO_AI).map(g => {
-    const b64       = g.src.split(',')[1] ?? g.src;
-    const mediaType = g.src.startsWith('data:image/png')  ? 'image/png'  :
-                      g.src.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg';
-    return { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } };
-  });
-
-  const todCtx = state.tod ? ` (${state.tod.toLowerCase()})` : '';
-  const promptText = `You are a personal stylist. The user needs an outfit for: ${state.occasion}${todCtx}.
-
-${wxCtx}
-
-The user's wardrobe contains ONLY the following ${state.garments.length} items. Each image above corresponds to one item in this numbered list:
-${itemList}
-
-STRICT RULES — you must follow all of these:
-1. ONLY recommend items that appear in the numbered list above. Every item you suggest must be referenced by its exact name from the list.
-2. Examine each image carefully — identify the actual color, fabric, and style of each piece before making selections.
-3. Do NOT suggest, invent, or imply any clothing item that is not in the list. This includes accessories, shoes, belts, undershirts, or outerwear unless they explicitly appear in the list.
-4. If a standard outfit category is completely absent from the wardrobe (e.g. no shoes at all, no pants at all), you may add ONE short sentence suggesting a generic, non-specific substitute — for example "any neutral sneaker would complete the look" — and clearly note it is not in their wardrobe.
-5. Never suggest a specific brand, style name, or color for a gap-fill item. Keep it generic.
-
-Output format (follow exactly):
-Line 1: A short, punchy outfit title — no label, just the title itself
-Line 2: blank
-Line 3+: 2–3 sentences naming which specific wardrobe items to wear and why they suit the occasion and weather
-If gap-fill needed: 1 sentence maximum
-Final sentence: one practical styling tip (tucking, rolling sleeves, layering order, etc.)
-
-Total response: under 200 words.`;
+  const b64 = garment.src.split(',')[1] ?? garment.src;
+  const prompt = `Look at this clothing item image and return ONLY a JSON object with these fields (no markdown, no explanation):
+{
+  "name": "short descriptive name, e.g. Navy Slim-Fit Chinos",
+  "category": one of: "top","bottom","shoes","outerwear","belt","accessory","full-outfit","other",
+  "color": "primary color",
+  "color2": "secondary color or empty string",
+  "fabric": "fabric or material, e.g. Cotton, Leather, Denim",
+  "style": "fit or style descriptor, e.g. Slim fit, Relaxed, Oxford, Chelsea"
+}`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -728,8 +707,247 @@ Total response: under 200 words.`;
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5',
-        max_tokens: 700,
-        stream: true,
+        max_tokens: 200,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+          { type: 'text', text: prompt }
+        ]}]
+      })
+    });
+    if (!res.ok) throw new Error('tag failed');
+    const data = await res.json();
+    const text = data?.content?.[0]?.text || '';
+    const json = JSON.parse(text.replace(/```json|```/g, '').trim());
+    const g = state.garments.find(x => x.id === garment.id);
+    if (g) {
+      if (json.name)     g.name     = json.name;
+      if (json.category) g.category = json.category;
+      if (json.color)    g.color    = json.color;
+      if (json.color2)   g.color2   = json.color2;
+      if (json.fabric)   g.fabric   = json.fabric;
+      if (json.style)    g.style    = json.style;
+      renderWardrobe();
+      persistWardrobe();
+    }
+  } catch(e) { /* silently keep defaults */ }
+
+  state.analyzingQueue--;
+  updateAnalyzingBanner();
+}
+
+function updateAnalyzingBanner() {
+  const banner = document.getElementById('analyzingBanner');
+  const text   = document.getElementById('analyzingText');
+  if (state.analyzingQueue > 0) {
+    banner.style.display = 'flex';
+    text.textContent = state.analyzingQueue === 1
+      ? 'Analyzing 1 item…'
+      : `Analyzing ${state.analyzingQueue} items…`;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// ─── Upload ───────────────────────────────────────────────────
+function handleUpload(e) {
+  const files = Array.from(e.target.files);
+  let done = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const src  = await compressImage(ev.target.result);
+      const name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+      const id   = `${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+      const garment = { id, src, name, category: '', color: '', color2: '', fabric: '', style: '', notes: '' };
+      state.garments.push(garment);
+      if (++done === files.length) {
+        renderWardrobe(); updateCTA(); persistWardrobe();
+        showToast(`${files.length} item${files.length > 1 ? 's' : ''} added — analyzing…`);
+      }
+      autoTag(garment);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function removeGarment(id) {
+  state.garments = state.garments.filter(g => g.id !== id);
+  renderWardrobe(); updateCTA(); persistWardrobe();
+}
+
+// ─── Render wardrobe ──────────────────────────────────────────
+function renderWardrobe() {
+  const grid      = document.getElementById('wardrobeGrid');
+  const badge     = document.getElementById('countBadge');
+  const uploadWrap= document.getElementById('uploadZoneWrap');
+  const addMore   = document.getElementById('addMoreWrap');
+  const clearBtn  = document.getElementById('clearBtn');
+  const tapHint   = document.getElementById('tapHint');
+  const n         = state.garments.length;
+
+  badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none';
+  uploadWrap.style.display = n === 0 ? 'block' : 'none';
+  addMore.style.display    = n > 0 ? 'block' : 'none';
+  clearBtn.style.display   = n > 0 ? 'inline' : 'none';
+  tapHint.style.display    = n > 0 ? 'block' : 'none';
+
+  grid.innerHTML = state.garments.map(g => {
+    const catLabel = g.category ? CATEGORIES[g.category] || g.category : '…';
+    const isAnalyzing = !g.category;
+    return `
+      <div class="garment-card${isAnalyzing ? ' analyzing' : ''}" onclick="openMetaModal('${g.id}')">
+        <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
+        <div class="garment-category-badge">${catLabel}</div>
+        <div class="garment-label">${escHtml(g.name)}</div>
+        <div class="edit-icon">✏️</div>
+        <button class="remove-btn" onclick="event.stopPropagation();removeGarment('${g.id}')" aria-label="Remove">×</button>
+      </div>`;
+  }).join('');
+
+  if (n === 0) setStorageStatus('saved', '0 items');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Metadata modal ───────────────────────────────────────────
+function openMetaModal(id) {
+  const g = state.garments.find(x => x.id === id);
+  if (!g) return;
+  state.editingId = id;
+  document.getElementById('modalThumb').src     = g.src;
+  document.getElementById('modalTitle').textContent = g.name || 'Untitled';
+  document.getElementById('metaName').value     = g.name     || '';
+  document.getElementById('metaCategory').value = g.category || '';
+  document.getElementById('metaColor').value    = g.color    || '';
+  document.getElementById('metaColor2').value   = g.color2   || '';
+  document.getElementById('metaFabric').value   = g.fabric   || '';
+  document.getElementById('metaStyle').value    = g.style    || '';
+  document.getElementById('metaNotes').value    = g.notes    || '';
+  document.getElementById('metaModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMetaModal() {
+  document.getElementById('metaModal').classList.remove('open');
+  document.body.style.overflow = '';
+  state.editingId = null;
+}
+function handleModalBackdropClick(e) {
+  if (e.target === document.getElementById('metaModal')) closeMetaModal();
+}
+function saveMetadata() {
+  const g = state.garments.find(x => x.id === state.editingId);
+  if (!g) { closeMetaModal(); return; }
+  g.name     = document.getElementById('metaName').value.trim()     || g.name;
+  g.category = document.getElementById('metaCategory').value;
+  g.color    = document.getElementById('metaColor').value.trim();
+  g.color2   = document.getElementById('metaColor2').value.trim();
+  g.fabric   = document.getElementById('metaFabric').value.trim();
+  g.style    = document.getElementById('metaStyle').value.trim();
+  g.notes    = document.getElementById('metaNotes').value.trim();
+  renderWardrobe(); persistWardrobe();
+  closeMetaModal(); showToast('Item updated');
+}
+function deleteFromModal() {
+  if (!state.editingId) return;
+  removeGarment(state.editingId);
+  closeMetaModal(); showToast('Item removed');
+}
+
+// ─── AI outfit suggestion ─────────────────────────────────────
+async function getSuggestion() {
+  if (state.loading || !state.apiKey) return;
+  state.loading = true; updateCTA();
+
+  const btn = document.getElementById('suggestBtn');
+  btn.innerHTML = '<span class="spinner"></span>Styling your outfit…';
+
+  const rs      = document.getElementById('resultSection');
+  const rBody   = document.getElementById('resultBody');
+  const rTitle  = document.getElementById('resultTitle');
+  const rWx     = document.getElementById('resultWeather');
+  const rPieces = document.getElementById('resultPieces');
+
+  rs.style.display = 'block';
+  rTitle.textContent = 'Thinking…'; rBody.textContent = '';
+  rWx.style.display = 'none'; rPieces.innerHTML = '';
+
+  const wxCtx = state.weather
+    ? `Current weather: ${state.weather.temp}°F (feels like ${state.weather.feels}°F), ${state.weather.cond}, wind ${state.weather.wind} mph, humidity ${state.weather.humidity}%.`
+    : 'No weather data — assume mild, comfortable conditions around 72°F.';
+
+  // Build rich item list using metadata
+  const itemList = state.garments.map((g, i) => {
+    const parts = [`Item ${i+1}: ${g.name}`];
+    if (g.category) parts.push(`category=${CATEGORIES[g.category] || g.category}`);
+    if (g.color)    parts.push(`color=${g.color}${g.color2 ? '/'+g.color2 : ''}`);
+    if (g.fabric)   parts.push(`fabric=${g.fabric}`);
+    if (g.style)    parts.push(`style=${g.style}`);
+    if (g.notes)    parts.push(`notes=${g.notes}`);
+    return parts.join(', ');
+  }).join('\n');
+
+  // Categorize what the wardrobe has
+  const hasTops      = state.garments.some(g => g.category === 'top');
+  const hasBottoms   = state.garments.some(g => g.category === 'bottom');
+  const hasShoes     = state.garments.some(g => g.category === 'shoes');
+  const hasOuterwear = state.garments.some(g => g.category === 'outerwear');
+
+  const gapFills = [];
+  if (!hasTops)    gapFills.push('top (no tops in wardrobe — suggest a generic one)');
+  if (!hasBottoms) gapFills.push('bottom (no bottoms in wardrobe — suggest a generic one)');
+  if (!hasShoes)   gapFills.push('shoes (no shoes in wardrobe — suggest a generic style)');
+
+  const imageBlocks = state.garments.slice(0, MAX_IMAGES_TO_AI).map(g => {
+    const b64 = g.src.split(',')[1] ?? g.src;
+    const mt  = g.src.startsWith('data:image/png') ? 'image/png' :
+                g.src.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg';
+    return { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } };
+  });
+
+  const todCtx = state.tod ? ` (${state.tod.toLowerCase()})` : '';
+  const promptText = `You are a personal stylist building a complete outfit for: ${state.occasion}${todCtx}.
+
+${wxCtx}
+
+The user's wardrobe contains ONLY these ${state.garments.length} items:
+${itemList}
+
+MANDATORY OUTFIT REQUIREMENTS:
+1. You MUST select exactly ONE top from the wardrobe.
+2. You MUST select exactly ONE bottom from the wardrobe.
+3. You MUST select exactly ONE pair of shoes from the wardrobe.
+4. You MAY add outerwear or an accessory/belt from the wardrobe if it enhances the look.
+5. If a required category (top, bottom, or shoes) has NO items in the wardrobe, write one short generic gap-fill sentence (e.g. "Pair with any white leather sneaker") — keep it brief and clearly note it's not in their wardrobe.
+
+STRICT RULES:
+- ONLY recommend items that appear in the numbered list above by their exact name.
+- Never invent or imply specific items not in the list.
+- Use the metadata (category, color, fabric, style) to make thoughtful pairings.
+
+OUTPUT FORMAT (follow exactly):
+Line 1: Short punchy outfit title — no label prefix
+Line 2: blank
+Line 3–5: Name the specific top, bottom, and shoes chosen and why they work together for the occasion and weather.
+Line 6 (if needed): Gap-fill sentence(s) for missing categories.
+Final line: One practical styling tip.
+
+Under 200 words total.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 700, stream: true,
         messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: promptText }] }]
       })
     });
@@ -739,8 +957,7 @@ Total response: under 200 words.`;
       throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
 
-    const reader  = res.body.getReader();
-    const decoder = new TextDecoder();
+    const reader = res.body.getReader(), decoder = new TextDecoder();
     let full = '', titleParsed = false;
 
     while (true) {
@@ -788,17 +1005,16 @@ Total response: under 200 words.`;
   rs.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ─── Toast ───────────────────────────────────────────────────
+// ─── Toast ────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg, dur = 2800) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-// ─── Boot ────────────────────────────────────────────────────
+// ─── Boot ─────────────────────────────────────────────────────
 init();
 </script>
 </body>
