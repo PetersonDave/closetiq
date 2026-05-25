@@ -1,5 +1,8 @@
 name: Claude PR Generator
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   issues:
     types:
@@ -20,28 +23,26 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Run Claude
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
+      - name: Debug PATH
+        run: |   
+          npm bin -g
+          echo $PATH
+          which claude-code || true
+
+      - name: Call Claude API
         run: |
-          claude-code --dangerously-skip-permissions "
-          Read the repository and implement this issue.
-
-          Title:
-          ${ISSUE_TITLE}
-
-          Description:
-          ${ISSUE_BODY}
-
-          Rules:
-          - Follow the existing coding style
-          - Keep changes minimal
-          - Do not rewrite unrelated code
-          - Use vanilla JavaScript only
-          - Do not add frameworks
-          "
+          curl https://api.anthropic.com/v1/messages \
+            -H "x-api-key: ${{ secrets.ANTHROPIC_API_KEY }}" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "{
+              \"model\": \"claude-sonnet-4-20250514\",
+              \"max_tokens\": 2000,
+              \"messages\": [{
+                \"role\": \"user\",
+                \"content\": \"Implement this issue:\\nTitle: ${{ github.event.issue.title }}\\nBody: ${{ github.event.issue.body }}\"
+              }]
+            }"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
