@@ -322,6 +322,35 @@ section + section { padding-top: 0; }
   border-top-color: var(--accent); border-radius: 50%;
   animation: spin 0.7s linear infinite; flex-shrink: 0;
 }
+
+/* Anchor mode */
+.anchor-toggle {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-radius: 20px; padding: 5px 11px;
+  font-size: 11px; color: var(--text-muted); cursor: pointer;
+  font-family: var(--font-sans); letter-spacing: 0.3px;
+  -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+}
+.anchor-toggle.active { border-color: var(--accent); color: var(--accent-text); background: var(--accent-dim); }
+.anchor-toggle-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); transition: background 0.15s; }
+.anchor-toggle.active .anchor-toggle-dot { background: var(--accent); }
+.anchor-hint {
+  font-size: 11px; color: var(--text-dim); text-align: center;
+  padding: 8px 0 2px; line-height: 1.5;
+}
+.garment-card.anchor-selected { border-color: var(--accent) !important; border-width: 2px !important; }
+.garment-card.anchor-selected .anchor-badge {
+  display: flex;
+}
+.anchor-badge {
+  display: none; position: absolute; top: 4px; left: 4px;
+  background: var(--accent); color: #0f0e0d;
+  border-radius: 4px; padding: 2px 6px;
+  font-size: 9px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; align-items: center; gap: 3px;
+  z-index: 2;
+}
 </style>
 </head>
 <body>
@@ -370,10 +399,10 @@ section + section { padding-top: 0; }
     <div class="occasion-grid">
       <button class="occasion-btn" data-occasion="Work" onclick="selectOccasion(this)"><span class="icon">💼</span><span class="label">Work</span></button>
       <button class="occasion-btn" data-occasion="Casual" onclick="selectOccasion(this)"><span class="icon">☀️</span><span class="label">Casual</span></button>
-      <button class="occasion-btn" data-occasion="Dinner" onclick="selectOccasion(this)"><span class="icon">🍷</span><span class="label">Dinner</span></button>
+      <button class="occasion-btn" data-occasion="Dining" onclick="selectOccasion(this)"><span class="icon">🍷</span><span class="label">Dining</span></button>
       <button class="occasion-btn" data-occasion="Night Out" onclick="selectOccasion(this)"><span class="icon">🌙</span><span class="label">Night out</span></button>
       <button class="occasion-btn" data-occasion="Social" onclick="selectOccasion(this)"><span class="icon">🎉</span><span class="label">Social</span></button>
-      <button class="occasion-btn" data-occasion="Workout" onclick="selectOccasion(this)"><span class="icon">🏃</span><span class="label">Workout</span></button>
+      <button class="occasion-btn" data-occasion="Travel" onclick="selectOccasion(this)"><span class="icon">✈️</span><span class="label">Travel</span></button>
       <button class="occasion-btn" data-occasion="Contemporary Casual" onclick="selectOccasion(this)"><span class="icon">🧥</span><span class="label">Contemp. casual</span></button>
       <button class="occasion-btn" data-occasion="Cocktail Attire" onclick="selectOccasion(this)"><span class="icon">🥂</span><span class="label">Cocktail</span></button>
       <button class="occasion-btn" data-occasion="Semi-Formal" onclick="selectOccasion(this)"><span class="icon">👔</span><span class="label">Semi-formal</span></button>
@@ -382,6 +411,18 @@ section + section { padding-top: 0; }
     <div class="tod-grid">
       <button class="tod-btn" data-tod="Day" onclick="selectTod(this)"><span class="icon">🌤️</span><span class="label">Day</span></button>
       <button class="tod-btn" data-tod="Evening" onclick="selectTod(this)"><span class="icon">🌆</span><span class="label">Evening</span></button>
+    </div>
+    <div class="section-label" style="margin-top:16px;">Setting</div>
+    <div class="occasion-grid">
+      <button class="occasion-btn" data-setting="Country Club" onclick="selectSetting(this)"><span class="icon">⛳</span><span class="label">Country club</span></button>
+      <button class="occasion-btn" data-setting="Corporate Office" onclick="selectSetting(this)"><span class="icon">🏢</span><span class="label">Corp. office</span></button>
+      <button class="occasion-btn" data-setting="Business Meeting" onclick="selectSetting(this)"><span class="icon">🤝</span><span class="label">Biz meeting</span></button>
+      <button class="occasion-btn" data-setting="Upscale Restaurant" onclick="selectSetting(this)"><span class="icon">🍽️</span><span class="label">Upscale dining</span></button>
+      <button class="occasion-btn" data-setting="Casual Restaurant" onclick="selectSetting(this)"><span class="icon">🍔</span><span class="label">Casual dining</span></button>
+      <button class="occasion-btn" data-setting="Friend's Home" onclick="selectSetting(this)"><span class="icon">🏠</span><span class="label">Friend's home</span></button>
+      <button class="occasion-btn" data-setting="Outdoor / Nature" onclick="selectSetting(this)"><span class="icon">🌿</span><span class="label">Outdoor</span></button>
+      <button class="occasion-btn" data-setting="Bar / Lounge" onclick="selectSetting(this)"><span class="icon">🍸</span><span class="label">Bar / lounge</span></button>
+      <button class="occasion-btn" data-setting="Place of Worship" onclick="selectSetting(this)"><span class="icon">🕊️</span><span class="label">Place of worship</span></button>
     </div>
   </section>
 
@@ -399,6 +440,9 @@ section + section { padding-top: 0; }
         <span id="countBadge" style="display:none" class="count-badge">0</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
+        <button class="anchor-toggle" id="anchorToggle" onclick="toggleAnchorMode()" style="display:none;">
+          <span class="anchor-toggle-dot"></span>Pin items
+        </button>
         <div class="storage-status">
           <div class="storage-dot saved" id="storageDot"></div>
           <span class="storage-label" id="storageLabel">0 items</span>
@@ -406,6 +450,7 @@ section + section { padding-top: 0; }
         <button class="clear-btn" id="clearBtn" onclick="confirmClear()" style="display:none;">Clear all</button>
       </div>
     </div>
+    <div class="anchor-hint" id="anchorHint" style="display:none;">Tap a top, bottom, or shoes to pin it — the AI will build around your selection.</div>
 
     <div id="analyzingBanner" style="display:none;" class="analyzing-banner">
       <div class="analyzing-spinner"></div>
@@ -538,9 +583,11 @@ const CATEGORIES = {
 
 // ─── State ────────────────────────────────────────────────────
 const state = {
-  occasion: null, tod: null, weather: null,
+  occasion: null, tod: null, setting: null, weather: null,
   garments: [], loading: false, apiKey: null, saveTimer: null,
-  editingId: null, analyzingQueue: 0
+  editingId: null, analyzingQueue: 0,
+  anchorMode: false,
+  anchors: { top: null, bottom: null, shoes: null }  // id or null
 };
 
 // ─── Init ─────────────────────────────────────────────────────
@@ -624,6 +671,10 @@ function selectOccasion(btn) {
 function selectTod(btn) {
   document.querySelectorAll('.tod-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active'); state.tod = btn.dataset.tod;
+}
+function selectSetting(btn) {
+  document.querySelectorAll('[data-setting]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); state.setting = btn.dataset.setting;
 }
 function updateCTA() {
   document.getElementById('suggestBtn').disabled =
@@ -771,36 +822,87 @@ function handleUpload(e) {
   e.target.value = '';
 }
 
+function toggleAnchorMode() {
+  state.anchorMode = !state.anchorMode;
+  if (!state.anchorMode) {
+    // clear anchors when exiting mode
+    state.anchors = { top: null, bottom: null, shoes: null };
+  }
+  renderWardrobe();
+}
+
+function handleCardTap(id) {
+  if (!state.anchorMode) { openMetaModal(id); return; }
+  const g = state.garments.find(x => x.id === id);
+  if (!g) return;
+
+  // Determine which slot this item belongs to
+  const slot = g.category === 'top'    ? 'top'    :
+               g.category === 'bottom' ? 'bottom' :
+               g.category === 'shoes'  ? 'shoes'  : null;
+
+  if (!slot) {
+    showToast('Only tops, bottoms, and shoes can be pinned');
+    return;
+  }
+
+  // Toggle: if already anchored in its slot, unpin it
+  if (state.anchors[slot] === id) {
+    state.anchors[slot] = null;
+    showToast(`${CATEGORIES[slot]} unpinned`);
+  } else {
+    state.anchors[slot] = id;
+    showToast(`${g.name} pinned as ${slot}`);
+  }
+  renderWardrobe();
+}
+
 function removeGarment(id) {
+  // clear any anchor slot using this id
+  Object.keys(state.anchors).forEach(slot => {
+    if (state.anchors[slot] === id) state.anchors[slot] = null;
+  });
   state.garments = state.garments.filter(g => g.id !== id);
   renderWardrobe(); updateCTA(); persistWardrobe();
 }
 
 // ─── Render wardrobe ──────────────────────────────────────────
 function renderWardrobe() {
-  const grid      = document.getElementById('wardrobeGrid');
-  const badge     = document.getElementById('countBadge');
-  const uploadWrap= document.getElementById('uploadZoneWrap');
-  const addMore   = document.getElementById('addMoreWrap');
-  const clearBtn  = document.getElementById('clearBtn');
-  const tapHint   = document.getElementById('tapHint');
-  const n         = state.garments.length;
+  const grid       = document.getElementById('wardrobeGrid');
+  const badge      = document.getElementById('countBadge');
+  const uploadWrap = document.getElementById('uploadZoneWrap');
+  const addMore    = document.getElementById('addMoreWrap');
+  const clearBtn   = document.getElementById('clearBtn');
+  const tapHint    = document.getElementById('tapHint');
+  const anchorToggle = document.getElementById('anchorToggle');
+  const anchorHint   = document.getElementById('anchorHint');
+  const n          = state.garments.length;
 
   badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none';
   uploadWrap.style.display = n === 0 ? 'block' : 'none';
   addMore.style.display    = n > 0 ? 'block' : 'none';
   clearBtn.style.display   = n > 0 ? 'inline' : 'none';
-  tapHint.style.display    = n > 0 ? 'block' : 'none';
+  tapHint.style.display    = n > 0 && !state.anchorMode ? 'block' : 'none';
+  anchorToggle.style.display = n > 0 ? 'flex' : 'none';
+  anchorHint.style.display   = state.anchorMode ? 'block' : 'none';
+  anchorToggle.classList.toggle('active', state.anchorMode);
 
   grid.innerHTML = state.garments.map(g => {
     const catLabel = g.category ? CATEGORIES[g.category] || g.category : '…';
     const isAnalyzing = !g.category;
+    const anchorSlot = Object.entries(state.anchors).find(([,id]) => id === g.id);
+    const isAnchored = !!anchorSlot;
+    const anchorLabel = anchorSlot ? anchorSlot[0] : '';
+
     return `
-      <div class="garment-card${isAnalyzing ? ' analyzing' : ''}" onclick="openMetaModal('${g.id}')">
+      <div class="garment-card${isAnalyzing ? ' analyzing' : ''}${isAnchored ? ' anchor-selected' : ''}"
+           onclick="handleCardTap('${g.id}')">
         <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
-        <div class="garment-category-badge">${catLabel}</div>
+        ${isAnchored
+          ? `<div class="anchor-badge">📌 ${anchorLabel}</div>`
+          : `<div class="garment-category-badge">${catLabel}</div>`}
         <div class="garment-label">${escHtml(g.name)}</div>
-        <div class="edit-icon">✏️</div>
+        ${!state.anchorMode ? '<div class="edit-icon">✏️</div>' : ''}
         <button class="remove-btn" onclick="event.stopPropagation();removeGarment('${g.id}')" aria-label="Remove">×</button>
       </div>`;
   }).join('');
@@ -907,20 +1009,34 @@ async function getSuggestion() {
     return { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } };
   });
 
-  const todCtx = state.tod ? ` (${state.tod.toLowerCase()})` : '';
-  const promptText = `You are a personal stylist building a complete outfit for: ${state.occasion}${todCtx}.
+  // Build anchor context
+  const anchoredItems = Object.entries(state.anchors)
+    .filter(([, id]) => id !== null)
+    .map(([slot, id]) => {
+      const g = state.garments.find(x => x.id === id);
+      return g ? `${slot}: "${g.name}" (MUST use this exact item)` : null;
+    }).filter(Boolean);
+
+  const anchorBlock = anchoredItems.length > 0
+    ? `\nPINNED ITEMS — the user has pre-selected these pieces and they MUST appear in the outfit:\n${anchoredItems.join('\n')}\n`
+    : '';
+
+  const todCtx     = state.tod     ? ` (${state.tod.toLowerCase()})` : '';
+  const settingCtx = state.setting ? ` at a ${state.setting}` : '';
+  const promptText = `You are a personal stylist building a complete outfit for: ${state.occasion}${todCtx}${settingCtx}.
 
 ${wxCtx}
 
 The user's wardrobe contains ONLY these ${state.garments.length} items:
 ${itemList}
-
+${anchorBlock}
 MANDATORY OUTFIT REQUIREMENTS:
 1. You MUST select exactly ONE top from the wardrobe.
 2. You MUST select exactly ONE bottom from the wardrobe.
 3. You MUST select exactly ONE pair of shoes from the wardrobe.
 4. You MAY add outerwear or an accessory/belt from the wardrobe if it enhances the look.
-5. If a required category (top, bottom, or shoes) has NO items in the wardrobe, write one short generic gap-fill sentence (e.g. "Pair with any white leather sneaker") — keep it brief and clearly note it's not in their wardrobe.
+5. If a pinned item exists for a slot, you MUST use that exact item — do not substitute it.
+6. If a required category (top, bottom, or shoes) has NO items in the wardrobe, write one short generic gap-fill sentence — keep it brief and clearly note it's not in their wardrobe.
 
 STRICT RULES:
 - ONLY recommend items that appear in the numbered list above by their exact name.
