@@ -199,8 +199,16 @@ section + section { padding-top: 0; }
 .weather-badge {
   font-size: 11px; background: var(--accent-dim); color: var(--accent-text);
   border: 0.5px solid rgba(201,169,110,0.25); border-radius: 20px;
-  padding: 4px 10px; white-space: nowrap; margin-left: 10px; flex-shrink: 0; margin-top: 3px;
+  padding: 4px 10px; white-space: nowrap;
 }
+.score-badge {
+  font-size: 13px; font-weight: 600; border-radius: 20px;
+  padding: 4px 10px; white-space: nowrap; text-align: center;
+  min-width: 54px;
+}
+.score-badge.score-high   { background: rgba(107,191,142,0.15); color: #6bbf8e; border: 0.5px solid rgba(107,191,142,0.3); }
+.score-badge.score-mid    { background: var(--accent-dim);       color: var(--accent-text); border: 0.5px solid rgba(201,169,110,0.3); }
+.score-badge.score-low    { background: rgba(224,90,90,0.1);     color: #e05a5a; border: 0.5px solid rgba(224,90,90,0.25); }
 .result-body { font-size: 14px; color: var(--text-muted); line-height: 1.75; white-space: pre-wrap; }
 .piece-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
 .piece-tag { font-size: 11px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 10px; color: var(--text-muted); }
@@ -323,7 +331,23 @@ section + section { padding-top: 0; }
   animation: spin 0.7s linear infinite; flex-shrink: 0;
 }
 
-/* Anchor mode */
+/* Style preference chips */
+.pref-group-label {
+  font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 500; margin-bottom: 8px;
+}
+.pref-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pref-chip {
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-radius: 20px; padding: 7px 14px;
+  font-family: var(--font-sans); font-size: 13px; color: var(--text-muted);
+  cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.pref-chip:active { transform: scale(0.95); }
+.pref-chip.active {
+  border-color: var(--accent); background: var(--accent-dim);
+  color: var(--accent-text);
+}
 .anchor-toggle {
   display: flex; align-items: center; gap: 7px;
   background: var(--surface); border: 0.5px solid var(--border);
@@ -426,6 +450,43 @@ section + section { padding-top: 0; }
     </div>
   </section>
 
+  <!-- Style Preferences -->
+  <section>
+    <div class="section-label">Style preferences <span style="color:var(--text-dim);font-size:9px;letter-spacing:0;text-transform:none;font-weight:400;">optional — tap to select, tap again to clear</span></div>
+
+    <div class="pref-group-label">Bottoms</div>
+    <div class="pref-chips" id="prefBottoms">
+      <button class="pref-chip" data-pref-group="bottom" data-pref="Jeans" onclick="selectPref(this)">Jeans</button>
+      <button class="pref-chip" data-pref-group="bottom" data-pref="Chinos" onclick="selectPref(this)">Chinos</button>
+      <button class="pref-chip" data-pref-group="bottom" data-pref="Dress Pants" onclick="selectPref(this)">Dress pants</button>
+      <button class="pref-chip" data-pref-group="bottom" data-pref="Shorts" onclick="selectPref(this)">Shorts</button>
+    </div>
+
+    <div class="pref-group-label" style="margin-top:12px;">Tops</div>
+    <div class="pref-chips" id="prefTops">
+      <button class="pref-chip" data-pref-group="top" data-pref="Button-Down Shirt" onclick="selectPref(this)">Button-down</button>
+      <button class="pref-chip" data-pref-group="top" data-pref="Polo Shirt" onclick="selectPref(this)">Polo</button>
+      <button class="pref-chip" data-pref-group="top" data-pref="T-Shirt" onclick="selectPref(this)">T-shirt</button>
+      <button class="pref-chip" data-pref-group="top" data-pref="Sweater" onclick="selectPref(this)">Sweater</button>
+    </div>
+
+    <div class="pref-group-label" style="margin-top:12px;">Shoes</div>
+    <div class="pref-chips" id="prefShoes">
+      <button class="pref-chip" data-pref-group="shoes" data-pref="Dress Shoes" onclick="selectPref(this)">Dress shoes</button>
+      <button class="pref-chip" data-pref-group="shoes" data-pref="Loafers" onclick="selectPref(this)">Loafers</button>
+      <button class="pref-chip" data-pref-group="shoes" data-pref="Casual Shoes" onclick="selectPref(this)">Casual shoes</button>
+      <button class="pref-chip" data-pref-group="shoes" data-pref="Sneakers" onclick="selectPref(this)">Sneakers</button>
+      <button class="pref-chip" data-pref-group="shoes" data-pref="Boots" onclick="selectPref(this)">Boots</button>
+    </div>
+
+    <div class="pref-group-label" style="margin-top:12px;">Shirt tuck</div>
+    <div class="pref-chips" id="prefTuck">
+      <button class="pref-chip" data-pref-group="tuck" data-pref="Tucked in" onclick="selectPref(this)">Tucked in</button>
+      <button class="pref-chip" data-pref-group="tuck" data-pref="Untucked" onclick="selectPref(this)">Untucked</button>
+      <button class="pref-chip" data-pref-group="tuck" data-pref="AI decides" onclick="selectPref(this)">AI decides</button>
+    </div>
+  </section>
+
   <!-- Generate button -->
   <section>
     <div class="divider"></div>
@@ -487,7 +548,10 @@ section + section { padding-top: 0; }
     <div class="result-card">
       <div class="result-header">
         <div class="result-title" id="resultTitle"></div>
-        <div class="weather-badge" id="resultWeather" style="display:none;"></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
+          <div class="weather-badge" id="resultWeather" style="display:none;"></div>
+          <div class="score-badge" id="resultScore" style="display:none;"></div>
+        </div>
       </div>
       <div class="result-body" id="resultBody"></div>
       <div class="piece-tags" id="resultPieces"></div>
@@ -587,7 +651,8 @@ const state = {
   garments: [], loading: false, apiKey: null, saveTimer: null,
   editingId: null, analyzingQueue: 0,
   anchorMode: false,
-  anchors: { top: null, bottom: null, shoes: null }  // id or null
+  anchors: { top: null, bottom: null, shoes: null },
+  stylePrefs: { bottom: null, top: null, shoes: null, tuck: null }
 };
 
 // ─── Init ─────────────────────────────────────────────────────
@@ -675,6 +740,20 @@ function selectTod(btn) {
 function selectSetting(btn) {
   document.querySelectorAll('[data-setting]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active'); state.setting = btn.dataset.setting;
+}
+function selectPref(btn) {
+  const group = btn.dataset.prefGroup;
+  const val   = btn.dataset.pref;
+  // Toggle off if already selected
+  if (state.stylePrefs[group] === val) {
+    state.stylePrefs[group] = null;
+    btn.classList.remove('active');
+  } else {
+    // Deselect others in same group
+    document.querySelectorAll(`[data-pref-group="${group}"]`).forEach(b => b.classList.remove('active'));
+    state.stylePrefs[group] = val;
+    btn.classList.add('active');
+  }
 }
 function updateCTA() {
   document.getElementById('suggestBtn').disabled =
@@ -970,11 +1049,12 @@ async function getSuggestion() {
   const rBody   = document.getElementById('resultBody');
   const rTitle  = document.getElementById('resultTitle');
   const rWx     = document.getElementById('resultWeather');
+  const rScore  = document.getElementById('resultScore');
   const rPieces = document.getElementById('resultPieces');
 
   rs.style.display = 'block';
   rTitle.textContent = 'Thinking…'; rBody.textContent = '';
-  rWx.style.display = 'none'; rPieces.innerHTML = '';
+  rWx.style.display = 'none'; rScore.style.display = 'none'; rPieces.innerHTML = '';
 
   const wxCtx = state.weather
     ? `Current weather: ${state.weather.temp}°F (feels like ${state.weather.feels}°F), ${state.weather.cond}, wind ${state.weather.wind} mph, humidity ${state.weather.humidity}%.`
@@ -1009,6 +1089,18 @@ async function getSuggestion() {
     return { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } };
   });
 
+  // Build style preferences context
+  const prefLines = [];
+  if (state.stylePrefs.bottom) prefLines.push(`- Bottoms: prefer ${state.stylePrefs.bottom} specifically`);
+  if (state.stylePrefs.top)    prefLines.push(`- Tops: prefer a ${state.stylePrefs.top} specifically`);
+  if (state.stylePrefs.shoes)  prefLines.push(`- Shoes: prefer ${state.stylePrefs.shoes} specifically`);
+  if (state.stylePrefs.tuck && state.stylePrefs.tuck !== 'AI decides')
+    prefLines.push(`- Shirt tuck: ${state.stylePrefs.tuck}`);
+
+  const prefBlock = prefLines.length > 0
+    ? `\nSTYLE PREFERENCES — honor these if matching items exist in the wardrobe:\n${prefLines.join('\n')}\n`
+    : '';
+
   // Build anchor context
   const anchoredItems = Object.entries(state.anchors)
     .filter(([, id]) => id !== null)
@@ -1029,14 +1121,16 @@ ${wxCtx}
 
 The user's wardrobe contains ONLY these ${state.garments.length} items:
 ${itemList}
-${anchorBlock}
+${anchorBlock}${prefBlock}
 MANDATORY OUTFIT REQUIREMENTS:
 1. You MUST select exactly ONE top from the wardrobe.
 2. You MUST select exactly ONE bottom from the wardrobe.
 3. You MUST select exactly ONE pair of shoes from the wardrobe.
 4. You MAY add outerwear or an accessory/belt from the wardrobe if it enhances the look.
 5. If a pinned item exists for a slot, you MUST use that exact item — do not substitute it.
-6. If a required category (top, bottom, or shoes) has NO items in the wardrobe, write one short generic gap-fill sentence — keep it brief and clearly note it's not in their wardrobe.
+6. If style preferences are set, choose items matching those sub-types where available. If no matching item exists, choose the closest alternative and note the gap.
+7. If a required category (top, bottom, or shoes) has NO items in the wardrobe, write one short generic gap-fill sentence — keep it brief and clearly note it's not in their wardrobe.
+8. You MUST end the response with a dedicated tuck line: "Tuck: ${state.stylePrefs.tuck && state.stylePrefs.tuck !== 'AI decides' ? state.stylePrefs.tuck : 'recommend whether to tuck or leave untucked based on the outfit and occasion'}"
 
 STRICT RULES:
 - ONLY recommend items that appear in the numbered list above by their exact name.
@@ -1048,9 +1142,11 @@ Line 1: Short punchy outfit title — no label prefix
 Line 2: blank
 Line 3–5: Name the specific top, bottom, and shoes chosen and why they work together for the occasion and weather.
 Line 6 (if needed): Gap-fill sentence(s) for missing categories.
-Final line: One practical styling tip.
+Second to last line: One practical styling tip.
+Last line: Tuck recommendation — format as "Tuck: tucked in" or "Tuck: untucked" with one sentence explaining why.
+Final line: Outfit score — format exactly as "Score: X/10 — " followed by one sentence explaining the rating. Consider how well the items work together, suit the occasion/setting/weather, and fulfill the style preferences.
 
-Under 200 words total.`;
+Under 230 words total.`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1105,6 +1201,15 @@ Under 200 words total.`;
     if (state.weather) {
       rWx.textContent = `${state.weather.temp}°F · ${state.weather.cond}`;
       rWx.style.display = 'block';
+    }
+
+    // Extract and render score
+    const scoreMatch = full.match(/Score:\s*(\d+)\/10/i);
+    if (scoreMatch) {
+      const n = parseInt(scoreMatch[1], 10);
+      rScore.textContent = `${n}/10`;
+      rScore.className = 'score-badge ' + (n >= 8 ? 'score-high' : n >= 5 ? 'score-mid' : 'score-low');
+      rScore.style.display = 'block';
     }
     rPieces.innerHTML = state.garments.map(g =>
       `<span class="piece-tag">${escHtml(g.name.length > 22 ? g.name.slice(0,20)+'…' : g.name)}</span>`
