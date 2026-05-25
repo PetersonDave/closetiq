@@ -331,7 +331,33 @@ section + section { padding-top: 0; }
   animation: spin 0.7s linear infinite; flex-shrink: 0;
 }
 
-/* Style preference chips */
+/* Pairing cards */
+.pairing-card {
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
+}
+.pairing-card-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 10px; gap: 10px;
+}
+.pairing-rank {
+  font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 500; flex-shrink: 0; margin-top: 3px;
+}
+.pairing-title {
+  font-family: var(--font-serif); font-size: 16px; color: var(--accent-text);
+  line-height: 1.3; flex: 1;
+}
+.pairing-body {
+  font-size: 13px; color: var(--text-muted); line-height: 1.65; white-space: pre-wrap;
+}
+.pairing-loading {
+  text-align: center; padding: 14px; font-size: 13px; color: var(--text-dim);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.pairing-card.pairing-mode-select { border-color: var(--accent); border-width: 2px; }
+.garment-card.pairing-candidate { border-color: var(--accent) !important; border-width: 2px !important; }
+.garment-card.pairing-candidate .garment-category-badge { background: var(--accent); color: #0f0e0d; }
 .pref-group-label {
   font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
   color: var(--text-dim); font-weight: 500; margin-bottom: 8px;
@@ -491,6 +517,7 @@ section + section { padding-top: 0; }
   <section>
     <div class="divider"></div>
     <button class="cta-btn" id="suggestBtn" onclick="getSuggestion()" disabled>Suggest an outfit</button>
+    <button class="cta-btn" id="pairingBtn" onclick="startPairingMode()" disabled style="margin-top:10px;background:var(--surface);color:var(--accent-text);border:0.5px solid var(--accent);">Best pairings for one item</button>
   </section>
 
   <!-- Wardrobe -->
@@ -512,6 +539,7 @@ section + section { padding-top: 0; }
       </div>
     </div>
     <div class="anchor-hint" id="anchorHint" style="display:none;">Tap a top, bottom, or shoes to pin it — the AI will build around your selection.</div>
+    <div class="anchor-hint" id="pairingHint" style="display:none;">Tap any item to find its best outfit pairings.</div>
 
     <div id="analyzingBanner" style="display:none;" class="analyzing-banner">
       <div class="analyzing-spinner"></div>
@@ -556,6 +584,15 @@ section + section { padding-top: 0; }
       <div class="result-body" id="resultBody"></div>
       <div class="piece-tags" id="resultPieces"></div>
     </div>
+  </section>
+
+  <!-- Pairings results -->
+  <section id="pairingsSection" style="display:none; padding-top:0;">
+    <div class="section-label" style="margin-bottom:14px;">
+      <div id="pairingsTitle">Best pairings</div>
+      <button class="clear-btn" onclick="closePairings()">✕ Close</button>
+    </div>
+    <div id="pairingsList"></div>
   </section>
 
 </div>
@@ -652,7 +689,8 @@ const state = {
   editingId: null, analyzingQueue: 0,
   anchorMode: false,
   anchors: { top: null, bottom: null, shoes: null },
-  stylePrefs: { bottom: null, top: null, shoes: null, tuck: null }
+  stylePrefs: { bottom: null, top: null, shoes: null, tuck: null },
+  pairingMode: false, pairingItemId: null
 };
 
 // ─── Init ─────────────────────────────────────────────────────
@@ -756,8 +794,9 @@ function selectPref(btn) {
   }
 }
 function updateCTA() {
-  document.getElementById('suggestBtn').disabled =
-    !state.occasion || state.garments.length < 2 || state.loading || !state.apiKey;
+  const hasEnough = state.garments.length >= 2 && !state.loading && !!state.apiKey;
+  document.getElementById('suggestBtn').disabled = !state.occasion || !hasEnough;
+  document.getElementById('pairingBtn').disabled = !hasEnough;
 }
 
 // ─── Weather ──────────────────────────────────────────────────
@@ -911,6 +950,12 @@ function toggleAnchorMode() {
 }
 
 function handleCardTap(id) {
+  if (state.pairingMode) {
+    state.pairingItemId = id;
+    renderWardrobe();
+    getPairings(id);
+    return;
+  }
   if (!state.anchorMode) { openMetaModal(id); return; }
   const g = state.garments.find(x => x.id === id);
   if (!g) return;
@@ -937,6 +982,9 @@ function handleCardTap(id) {
 }
 
 function removeGarment(id) {
+  const g = state.garments.find(x => x.id === id);
+  const name = g ? g.name : 'this item';
+  if (!confirm(`Remove "${name}" from your wardrobe?`)) return;
   // clear any anchor slot using this id
   Object.keys(state.anchors).forEach(slot => {
     if (state.anchors[slot] === id) state.anchors[slot] = null;
@@ -955,15 +1003,17 @@ function renderWardrobe() {
   const tapHint    = document.getElementById('tapHint');
   const anchorToggle = document.getElementById('anchorToggle');
   const anchorHint   = document.getElementById('anchorHint');
+  const pairingHint  = document.getElementById('pairingHint');
   const n          = state.garments.length;
 
   badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none';
   uploadWrap.style.display = n === 0 ? 'block' : 'none';
   addMore.style.display    = n > 0 ? 'block' : 'none';
   clearBtn.style.display   = n > 0 ? 'inline' : 'none';
-  tapHint.style.display    = n > 0 && !state.anchorMode ? 'block' : 'none';
+  tapHint.style.display    = n > 0 && !state.anchorMode && !state.pairingMode ? 'block' : 'none';
   anchorToggle.style.display = n > 0 ? 'flex' : 'none';
   anchorHint.style.display   = state.anchorMode ? 'block' : 'none';
+  pairingHint.style.display  = state.pairingMode ? 'block' : 'none';
   anchorToggle.classList.toggle('active', state.anchorMode);
 
   grid.innerHTML = state.garments.map(g => {
@@ -972,16 +1022,17 @@ function renderWardrobe() {
     const anchorSlot = Object.entries(state.anchors).find(([,id]) => id === g.id);
     const isAnchored = !!anchorSlot;
     const anchorLabel = anchorSlot ? anchorSlot[0] : '';
+    const isPairingSelected = state.pairingMode && state.pairingItemId === g.id;
 
     return `
-      <div class="garment-card${isAnalyzing ? ' analyzing' : ''}${isAnchored ? ' anchor-selected' : ''}"
+      <div class="garment-card${isAnalyzing ? ' analyzing' : ''}${isAnchored ? ' anchor-selected' : ''}${isPairingSelected ? ' pairing-candidate' : ''}"
            onclick="handleCardTap('${g.id}')">
         <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
         ${isAnchored
           ? `<div class="anchor-badge">📌 ${anchorLabel}</div>`
           : `<div class="garment-category-badge">${catLabel}</div>`}
         <div class="garment-label">${escHtml(g.name)}</div>
-        ${!state.anchorMode ? '<div class="edit-icon">✏️</div>' : ''}
+        ${!state.anchorMode && !state.pairingMode ? '<div class="edit-icon">✏️</div>' : ''}
         <button class="remove-btn" onclick="event.stopPropagation();removeGarment('${g.id}')" aria-label="Remove">×</button>
       </div>`;
   }).join('');
@@ -1035,6 +1086,179 @@ function deleteFromModal() {
   if (!state.editingId) return;
   removeGarment(state.editingId);
   closeMetaModal(); showToast('Item removed');
+}
+
+// ─── Pairing mode ─────────────────────────────────────────────
+function startPairingMode() {
+  state.pairingMode    = true;
+  state.pairingItemId  = null;
+  state.anchorMode     = false;
+  document.getElementById('pairingsSection').style.display = 'none';
+  document.getElementById('pairingsList').innerHTML = '';
+  renderWardrobe();
+  document.getElementById('pairingBtn').textContent = '✕ Cancel pairings';
+  document.getElementById('pairingBtn').onclick = closePairings;
+  document.getElementById('wardrobeGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function closePairings() {
+  state.pairingMode   = false;
+  state.pairingItemId = null;
+  document.getElementById('pairingsSection').style.display = 'none';
+  document.getElementById('pairingsList').innerHTML = '';
+  document.getElementById('pairingBtn').textContent = 'Best pairings for one item';
+  document.getElementById('pairingBtn').onclick = startPairingMode;
+  renderWardrobe();
+}
+
+async function getPairings(itemId) {
+  if (!state.apiKey) return;
+  const anchor = state.garments.find(g => g.id === itemId);
+  if (!anchor) return;
+
+  const section   = document.getElementById('pairingsSection');
+  const list      = document.getElementById('pairingsList');
+  const titleEl   = document.getElementById('pairingsTitle');
+
+  section.style.display = 'block';
+  titleEl.textContent   = `Best pairings for "${anchor.name}"`;
+  list.innerHTML = `<div class="pairing-loading"><span class="analyzing-spinner"></span>Finding best pairings…</div>`;
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const wxCtx = state.weather
+    ? `Current weather: ${state.weather.temp}°F (feels like ${state.weather.feels}°F), ${state.weather.cond}, wind ${state.weather.wind} mph, humidity ${state.weather.humidity}%.`
+    : 'No weather data — assume mild, comfortable conditions around 72°F.';
+
+  const occasionCtx = state.occasion
+    ? `Occasion context: ${state.occasion}${state.tod ? ' (' + state.tod.toLowerCase() + ')' : ''}${state.setting ? ' at a ' + state.setting : ''}.`
+    : 'No specific occasion set — evaluate across general use cases.';
+
+  const itemList = state.garments.map((g, i) => {
+    const parts = [`Item ${i+1}: ${g.name}`];
+    if (g.category) parts.push(`category=${CATEGORIES[g.category] || g.category}`);
+    if (g.color)    parts.push(`color=${g.color}${g.color2 ? '/'+g.color2 : ''}`);
+    if (g.fabric)   parts.push(`fabric=${g.fabric}`);
+    if (g.style)    parts.push(`style=${g.style}`);
+    if (g.notes)    parts.push(`notes=${g.notes}`);
+    return parts.join(', ');
+  }).join('\n');
+
+  const anchorDesc = [
+    anchor.name,
+    anchor.category ? `category=${CATEGORIES[anchor.category] || anchor.category}` : '',
+    anchor.color ? `color=${anchor.color}` : '',
+    anchor.fabric ? `fabric=${anchor.fabric}` : '',
+    anchor.style ? `style=${anchor.style}` : ''
+  ].filter(Boolean).join(', ');
+
+  const imageBlocks = state.garments.slice(0, MAX_IMAGES_TO_AI).map(g => {
+    const b64 = g.src.split(',')[1] ?? g.src;
+    const mt  = g.src.startsWith('data:image/png') ? 'image/png' :
+                g.src.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg';
+    return { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } };
+  });
+
+  const prompt = `You are a personal stylist. The user has selected one item and wants to find the best complete outfits built around it.
+
+ANCHOR ITEM (must appear in every outfit): ${anchorDesc}
+
+${wxCtx}
+${occasionCtx}
+
+Full wardrobe (ONLY use items from this list):
+${itemList}
+
+TASK: Generate up to 5 distinct, complete outfit combinations using the anchor item. Each outfit must include a top, bottom, and shoes (all from the wardrobe list). Rank them from best to worst by outfit score.
+
+For each outfit, respond in this EXACT format (repeat the block up to 5 times):
+
+---
+OUTFIT [N]
+Title: [short punchy title]
+Score: [X]/10
+Items: [comma-separated list of exact item names from the wardrobe]
+Why: [2 sentences on why these pieces work together and suit the occasion/weather]
+Tip: [one practical styling tip]
+Tuck: [tucked in / untucked + one sentence why]
+---
+
+STRICT RULES:
+- Every outfit MUST include the anchor item.
+- Only use items that appear in the wardrobe list by their exact name.
+- All 5 outfits must be genuinely distinct combinations.
+- If the wardrobe doesn't have enough variety for 5 outfits, generate as many as possible.
+- Do not include any text outside the --- blocks.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: prompt }] }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data?.content?.[0]?.text || '';
+    renderPairings(text, anchor.name);
+
+  } catch(err) {
+    list.innerHTML = `<div class="pairing-loading" style="color:var(--danger);">Error: ${escHtml(err.message)}</div>`;
+  }
+}
+
+function renderPairings(text, anchorName) {
+  const list = document.getElementById('pairingsList');
+
+  // Parse --- blocks
+  const blocks = text.split('---').map(b => b.trim()).filter(b => b.startsWith('OUTFIT'));
+  if (blocks.length === 0) {
+    list.innerHTML = `<div class="pairing-loading">No pairings found — try adding more items to your wardrobe.</div>`;
+    return;
+  }
+
+  // Sort by score descending
+  const parsed = blocks.map(block => {
+    const title  = (block.match(/Title:\s*(.+)/i)  || [])[1]?.trim() || 'Outfit';
+    const scoreM = block.match(/Score:\s*(\d+)/i);
+    const score  = scoreM ? parseInt(scoreM[1]) : 0;
+    const items  = (block.match(/Items:\s*(.+)/i)  || [])[1]?.trim() || '';
+    const why    = (block.match(/Why:\s*(.+)/i)    || [])[1]?.trim() || '';
+    const tip    = (block.match(/Tip:\s*(.+)/i)    || [])[1]?.trim() || '';
+    const tuck   = (block.match(/Tuck:\s*(.+)/i)   || [])[1]?.trim() || '';
+    return { title, score, items, why, tip, tuck };
+  }).sort((a, b) => b.score - a.score);
+
+  const rankLabels = ['1st', '2nd', '3rd', '4th', '5th'];
+
+  list.innerHTML = parsed.map((p, i) => {
+    const scoreClass = p.score >= 8 ? 'score-high' : p.score >= 5 ? 'score-mid' : 'score-low';
+    const itemTags = p.items.split(',').map(s => `<span class="piece-tag">${escHtml(s.trim())}</span>`).join('');
+    return `
+      <div class="pairing-card">
+        <div class="pairing-card-header">
+          <div>
+            <div class="pairing-rank">${rankLabels[i] || (i+1)+'th'}</div>
+            <div class="pairing-title">${escHtml(p.title)}</div>
+          </div>
+          <div class="score-badge ${scoreClass}" style="flex-shrink:0;">${p.score}/10</div>
+        </div>
+        <div class="pairing-body">${escHtml(p.why)}${p.tip ? '\n\n💡 ' + p.tip : ''}${p.tuck ? '\n👔 Tuck: ' + p.tuck : ''}</div>
+        <div class="piece-tags" style="margin-top:12px;">${itemTags}</div>
+      </div>`;
+  }).join('');
 }
 
 // ─── AI outfit suggestion ─────────────────────────────────────
