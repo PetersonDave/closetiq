@@ -399,6 +399,50 @@ section + section { padding-top: 0; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
+/* Follow-up chat */
+.followup-section {
+  margin-top: 12px; border-top: 0.5px solid var(--border); padding-top: 14px;
+}
+.followup-label {
+  font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 500; margin-bottom: 10px;
+}
+.chat-history { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.chat-bubble {
+  max-width: 88%; padding: 10px 13px; border-radius: 14px;
+  font-size: 13px; line-height: 1.6; white-space: pre-wrap;
+}
+.chat-bubble.user {
+  background: var(--accent-dim); color: var(--accent-text);
+  border: 0.5px solid rgba(201,169,110,0.25);
+  align-self: flex-end; border-bottom-right-radius: 4px;
+}
+.chat-bubble.ai {
+  background: var(--surface2); color: var(--text-muted);
+  border: 0.5px solid var(--border);
+  align-self: flex-start; border-bottom-left-radius: 4px;
+}
+.chat-bubble.ai.streaming { opacity: 0.8; }
+.chat-input-row { display: flex; gap: 8px; align-items: flex-end; }
+.chat-input {
+  flex: 1; background: var(--surface2); border: 0.5px solid var(--border);
+  border-radius: 20px; padding: 10px 14px;
+  color: var(--text); font-family: var(--font-sans); font-size: 13px;
+  outline: none; resize: none; line-height: 1.4; max-height: 100px;
+  transition: border-color 0.2s; overflow-y: auto;
+}
+.chat-input:focus { border-color: var(--accent); }
+.chat-input::placeholder { color: var(--text-dim); }
+.chat-send-btn {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.chat-send-btn:active { opacity: 0.8; }
+
 /* Shop product image */
 .shop-product-img {
   width: 100%; aspect-ratio: 1/1; object-fit: cover;
@@ -526,12 +570,12 @@ section + section { padding-top: 0; }
 
   <!-- Tab bar -->
   <div class="tab-bar">
-    <button class="tab-btn active" id="tabOutfitBtn" onclick="switchTab('outfit')">👕 Outfit Builder</button>
-    <button class="tab-btn" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Best Pairings</button>
+    <button class="tab-btn active" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Best Pairings</button>
+    <button class="tab-btn" id="tabOutfitBtn" onclick="switchTab('outfit')">👕 Outfit Builder</button>
   </div>
 
   <!-- ── TAB: Outfit Builder ── -->
-  <div class="tab-panel active" id="tabOutfit">
+  <div class="tab-panel" id="tabOutfit">
 
     <!-- Occasion -->
     <section>
@@ -667,13 +711,22 @@ section + section { padding-top: 0; }
         </div>
         <div class="result-body" id="resultBody"></div>
         <div class="piece-tags" id="resultPieces"></div>
+        <div class="followup-section">
+          <div class="followup-label">Ask a follow-up</div>
+          <div class="chat-history" id="outfitChatHistory"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="outfitChatInput" placeholder="e.g. Would this work for a wedding?" rows="1"
+              onkeydown="handleChatKey(event,'outfit')" oninput="autoResize(this)"></textarea>
+            <button class="chat-send-btn" id="outfitChatSend" onclick="sendFollowUp('outfit')" title="Send">➤</button>
+          </div>
+        </div>
       </div>
     </section>
 
   </div><!-- end tabOutfit -->
 
   <!-- ── TAB: Best Pairings ── -->
-  <div class="tab-panel" id="tabPairings">
+  <div class="tab-panel active" id="tabPairings">
 
     <!-- Pairings wardrobe -->
     <section>
@@ -700,6 +753,17 @@ section + section { padding-top: 0; }
         <button class="clear-btn" onclick="closePairings()">✕ Clear</button>
       </div>
       <div id="pairingsList"></div>
+      <div class="result-card" id="pairingsChatCard" style="display:none; margin-top:12px;">
+        <div class="followup-section" style="margin-top:0;border-top:none;padding-top:0;">
+          <div class="followup-label">Ask a follow-up</div>
+          <div class="chat-history" id="pairingsChatHistory"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="pairingsChatInput" placeholder="e.g. Which pairing works best for summer?" rows="1"
+              onkeydown="handleChatKey(event,'pairings')" oninput="autoResize(this)"></textarea>
+            <button class="chat-send-btn" id="pairingsChatSend" onclick="sendFollowUp('pairings')" title="Send">➤</button>
+          </div>
+        </div>
+      </div>
     </section>
 
   </div><!-- end tabPairings -->
@@ -803,7 +867,7 @@ const state = {
 };
 
 // ─── Init ─────────────────────────────────────────────────────
-function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); }
+function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); renderPairingWardrobe(); }
 
 // ─── API Key ──────────────────────────────────────────────────
 function loadApiKey() {
@@ -1104,11 +1168,34 @@ function removeGarment(id) {
 // ─── Render wardrobe ──────────────────────────────────────────
 const CATEGORY_ORDER = { shoes: 0, bottom: 1, top: 2, outerwear: 3, belt: 4, accessory: 5, 'full-outfit': 6, other: 7, '': 8 };
 
+function bottomSubOrder(g) {
+  const s = (g.name + ' ' + (g.style || '') + ' ' + (g.notes || '')).toLowerCase();
+  if (/short|bermuda|cargo short|swim/.test(s)) return 1; // shorts last
+  return 0; // pants, chinos, jeans, trousers first
+}
+
+function topSubOrder(g) {
+  const s = (g.name + ' ' + (g.style || '') + ' ' + (g.fabric || '') + ' ' + (g.notes || '')).toLowerCase();
+  if (/short.?sleeve|polo|tee|t-shirt|henley|camp/.test(s)) return 1; // short sleeve last
+  return 0; // long sleeve, button-down, sweater, jacket first
+}
+
 function sortedGarments() {
   return [...state.garments].sort((a, b) => {
     const oa = CATEGORY_ORDER[a.category] ?? 8;
     const ob = CATEGORY_ORDER[b.category] ?? 8;
-    return oa !== ob ? oa - ob : a.name.localeCompare(b.name);
+    if (oa !== ob) return oa - ob;
+    // Within bottoms: pants/jeans/chinos before shorts
+    if (a.category === 'bottom') {
+      const sa = bottomSubOrder(a), sb = bottomSubOrder(b);
+      if (sa !== sb) return sa - sb;
+    }
+    // Within tops: long sleeve before short sleeve
+    if (a.category === 'top') {
+      const sa = topSubOrder(a), sb = topSubOrder(b);
+      if (sa !== sb) return sa - sb;
+    }
+    return a.name.localeCompare(b.name);
   });
 }
 
@@ -1481,6 +1568,9 @@ function renderPairings(text, anchorName) {
 
   list.innerHTML = outfitHTML + shopHTML;
 
+  // Seed follow-up chat with pairings context
+  initPairingsChat(text, anchorName);
+
   // Fetch product images asynchronously after render
   shopItems.forEach((s, si) => fetchProductImage(s.item, si));
 }
@@ -1489,26 +1579,139 @@ async function fetchProductImage(query, index) {
   const el = document.getElementById(`shop-img-${index}`);
   if (!el) return;
   try {
-    // Use DuckDuckGo image search proxy — no API key needed, returns real product images
-    const q   = encodeURIComponent(query + ' clothing product');
-    const url = `https://api.duckduckgo.com/?q=${q}&iax=images&ia=images&format=json&no_redirect=1`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const img  = data?.RelatedTopics?.[0]?.Icon?.URL || data?.Image || null;
-    if (img && img.length > 4) {
-      el.outerHTML = `<img class="shop-product-img" src="${escHtml(img)}" alt="${escHtml(query)}" loading="lazy" onerror="this.outerHTML='<div class=\\'shop-product-img-placeholder\\'>🛍️</div>'">`;
-      return;
+    // Unsplash Source: free, no API key, CORS-friendly, returns real fashion photos
+    const q   = encodeURIComponent(query.replace(/['"]/g, '').trim());
+    const src = `https://source.unsplash.com/400x400/?${q},clothing,fashion`;
+    el.outerHTML = `<img class="shop-product-img" src="${src}" alt="${escHtml(query)}" loading="lazy" onerror="this.outerHTML='<div class=\\'shop-product-img-placeholder\\'>🛍️</div>'">`;
+  } catch {
+    // keep placeholder
+  }
+}
+
+// ─── Follow-up chat ───────────────────────────────────────────
+const chatState = {
+  outfit:   { history: [], context: '', busy: false },
+  pairings: { history: [], context: '', busy: false }
+};
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function handleChatKey(e, tab) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFollowUp(tab); }
+}
+
+function appendBubble(tab, role, text) {
+  const histEl = document.getElementById(tab === 'outfit' ? 'outfitChatHistory' : 'pairingsChatHistory');
+  const div = document.createElement('div');
+  div.className = `chat-bubble ${role}`;
+  div.textContent = text;
+  histEl.appendChild(div);
+  histEl.scrollTop = histEl.scrollHeight;
+  return div;
+}
+
+async function sendFollowUp(tab) {
+  const cs       = chatState[tab];
+  const inputEl  = document.getElementById(tab === 'outfit' ? 'outfitChatInput' : 'pairingsChatInput');
+  const sendBtn  = document.getElementById(tab === 'outfit' ? 'outfitChatSend'  : 'pairingsChatSend');
+  const question = inputEl.value.trim();
+  if (!question || cs.busy || !state.apiKey) return;
+
+  cs.busy = true;
+  sendBtn.disabled = true;
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+
+  appendBubble(tab, 'user', question);
+  const aiBubble = appendBubble(tab, 'ai streaming', '…');
+
+  // Build message history for API
+  cs.history.push({ role: 'user', content: question });
+
+  const messages = [
+    { role: 'user', content: cs.context },
+    { role: 'assistant', content: 'Understood — I have the full context of your wardrobe and this recommendation. Ask me anything.' },
+    ...cs.history
+  ];
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 400,
+        stream: true,
+        system: 'You are a personal stylist assistant. Answer follow-up questions concisely about the outfit recommendation provided. Keep answers under 120 words. Be warm and direct.',
+        messages
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
-    // Fallback: try Open Graph via allorigins proxy with a Google Shopping search
-    const shopUrl = `https://www.google.com/search?tbm=shop&q=${q}`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(shopUrl)}`;
-    const r2 = await fetch(proxyUrl);
-    const html = await r2.text();
-    const match = html.match(/<img[^>]+src="(https:\/\/[^"]+\.(jpg|jpeg|png|webp)[^"]*)"/i);
-    if (match?.[1]) {
-      el.outerHTML = `<img class="shop-product-img" src="${escHtml(match[1])}" alt="${escHtml(query)}" loading="lazy" onerror="this.outerHTML='<div class=\\'shop-product-img-placeholder\\'>🛍️</div>'">`;
+
+    const reader = res.body.getReader(), decoder = new TextDecoder();
+    let full = '';
+    aiBubble.textContent = '';
+    aiBubble.classList.remove('streaming');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      for (const line of decoder.decode(value).split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6);
+        if (raw === '[DONE]') continue;
+        try {
+          const p = JSON.parse(raw);
+          if (p.type === 'content_block_delta' && p.delta?.text) {
+            full += p.delta.text;
+            aiBubble.textContent = full;
+            aiBubble.scrollIntoView({ block: 'nearest' });
+          }
+        } catch {}
+      }
     }
-  } catch { /* keep placeholder */ }
+
+    cs.history.push({ role: 'assistant', content: full });
+
+  } catch(err) {
+    aiBubble.textContent = 'Sorry, something went wrong. Try again.';
+  }
+
+  cs.busy = false;
+  sendBtn.disabled = false;
+}
+
+function initOutfitChat(recommendationText) {
+  const cs = chatState.outfit;
+  cs.history = [];
+  const wardrobeDesc = state.garments.map(g =>
+    [g.name, g.category ? CATEGORIES[g.category] : '', g.color, g.fabric].filter(Boolean).join(', ')
+  ).join('\n');
+  cs.context = `You are reviewing this outfit recommendation:\n\n${recommendationText}\n\nThe user's full wardrobe:\n${wardrobeDesc}\n\nOccasion: ${state.occasion || 'unspecified'}. Setting: ${state.setting || 'unspecified'}. Time: ${state.tod || 'unspecified'}.`;
+  document.getElementById('outfitChatHistory').innerHTML = '';
+}
+
+function initPairingsChat(pairingsText, anchorName) {
+  const cs = chatState.pairings;
+  cs.history = [];
+  const wardrobeDesc = state.garments.map(g =>
+    [g.name, g.category ? CATEGORIES[g.category] : '', g.color, g.fabric].filter(Boolean).join(', ')
+  ).join('\n');
+  cs.context = `You are reviewing these outfit pairings for the anchor item "${anchorName}":\n\n${pairingsText}\n\nThe user's full wardrobe:\n${wardrobeDesc}`;
+  document.getElementById('pairingsChatHistory').innerHTML = '';
+  document.getElementById('pairingsChatCard').style.display = 'block';
 }
 
 // ─── AI outfit suggestion ─────────────────────────────────────
@@ -1603,24 +1806,25 @@ MANDATORY OUTFIT REQUIREMENTS:
 4. You MAY add outerwear or an accessory/belt from the wardrobe if it enhances the look.
 5. If a pinned item exists for a slot, you MUST use that exact item — do not substitute it.
 6. If style preferences are set, choose items matching those sub-types where available. If no matching item exists, choose the closest alternative and note the gap.
-7. If a required category (top, bottom, or shoes) has NO items in the wardrobe, write one short generic gap-fill sentence — keep it brief and clearly note it's not in their wardrobe.
-8. You MUST end the response with a dedicated tuck line: "Tuck: ${state.stylePrefs.tuck && state.stylePrefs.tuck !== 'AI decides' ? state.stylePrefs.tuck : 'recommend whether to tuck or leave untucked based on the outfit and occasion'}"
+7. If a required category (top, bottom, or shoes) has NO items in the wardrobe, note the gap briefly.
+8. Always include a tuck recommendation.
 
 STRICT RULES:
 - ONLY recommend items that appear in the numbered list above by their exact name.
 - Never invent or imply specific items not in the list.
 - Use the metadata (category, color, fabric, style) to make thoughtful pairings.
+- Respond ONLY with a valid JSON object — no markdown, no explanation, no extra text.
 
-OUTPUT FORMAT (follow exactly):
-Line 1: Short punchy outfit title — no label prefix
-Line 2: blank
-Line 3–5: Name the specific top, bottom, and shoes chosen and why they work together for the occasion and weather.
-Line 6 (if needed): Gap-fill sentence(s) for missing categories.
-Second to last line: One practical styling tip.
-Last line: Tuck recommendation — format as "Tuck: tucked in" or "Tuck: untucked" with one sentence explaining why.
-Final line: Outfit score — format exactly as "Score: X/10 — " followed by one sentence explaining the rating. Consider how well the items work together, suit the occasion/setting/weather, and fulfill the style preferences.
-
-Under 230 words total.`;
+Return this exact JSON shape:
+{
+  "title": "short punchy outfit title",
+  "items": ["exact item name 1", "exact item name 2", "exact item name 3"],
+  "why": "2-3 sentences on why these pieces work together for the occasion and weather",
+  "tip": "one practical styling tip",
+  "tuck": "tucked in or untucked, with one sentence why",
+  "score": 8,
+  "scoreReason": "one sentence explaining the score"
+}`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1633,7 +1837,7 @@ Under 230 words total.`;
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5',
-        max_tokens: 700, stream: true,
+        max_tokens: 700,
         messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: promptText }] }]
       })
     });
@@ -1643,51 +1847,79 @@ Under 230 words total.`;
       throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
 
-    const reader = res.body.getReader(), decoder = new TextDecoder();
-    let full = '', titleParsed = false;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      for (const line of decoder.decode(value).split('\n')) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6);
-        if (raw === '[DONE]') continue;
-        try {
-          const p = JSON.parse(raw);
-          if (p.type === 'content_block_delta' && p.delta?.text) {
-            full += p.delta.text;
-            const nl = full.indexOf('\n');
-            if (!titleParsed && nl !== -1) {
-              rTitle.textContent = full.slice(0, nl).trim();
-              rBody.textContent  = full.slice(nl).trimStart();
-              titleParsed = true;
-            } else if (titleParsed) {
-              rBody.textContent = full.slice(full.indexOf('\n')).trimStart();
-            } else {
-              rTitle.textContent = full;
-            }
-          }
-        } catch {}
-      }
+    const data = await res.json();
+    const raw  = data?.content?.[0]?.text || '';
+    let outfit;
+    try {
+      outfit = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    } catch {
+      throw new Error('Could not parse AI response. Try again.');
     }
 
+    // Title
+    rTitle.textContent = outfit.title || 'Your outfit';
+
+    // Weather badge
     if (state.weather) {
       rWx.textContent = `${state.weather.temp}°F · ${state.weather.cond}`;
       rWx.style.display = 'block';
     }
 
-    // Extract and render score
-    const scoreMatch = full.match(/Score:\s*(\d+)\/10/i);
-    if (scoreMatch) {
-      const n = parseInt(scoreMatch[1], 10);
+    // Score badge
+    if (outfit.score) {
+      const n = parseInt(outfit.score, 10);
       rScore.textContent = `${n}/10`;
       rScore.className = 'score-badge ' + (n >= 8 ? 'score-high' : n >= 5 ? 'score-mid' : 'score-low');
       rScore.style.display = 'block';
     }
-    rPieces.innerHTML = state.garments.map(g =>
-      `<span class="piece-tag">${escHtml(g.name.length > 22 ? g.name.slice(0,20)+'…' : g.name)}</span>`
-    ).join('');
+
+    // Image strip
+    const itemNames = outfit.items || [];
+    const imageThumbs = itemNames.map(name => {
+      const g = state.garments.find(w =>
+        w.name.toLowerCase() === name.toLowerCase() ||
+        w.name.toLowerCase().includes(name.toLowerCase()) ||
+        name.toLowerCase().includes(w.name.toLowerCase())
+      );
+      if (!g) return '';
+      return `<div class="pairing-image-thumb">
+        <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
+        <div class="pairing-image-thumb-label">${escHtml(g.name)}</div>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    // Icon rows
+    const itemRows = itemNames.map(name => {
+      const icon = categoryIcon(name, state.garments);
+      const g    = state.garments.find(w =>
+        w.name.toLowerCase() === name.toLowerCase() ||
+        w.name.toLowerCase().includes(name.toLowerCase()) ||
+        name.toLowerCase().includes(w.name.toLowerCase())
+      );
+      const meta = g ? [g.color, g.fabric].filter(Boolean).join(' · ') : '';
+      return `<div class="pairing-item-row">
+        <div class="pairing-item-icon">${icon}</div>
+        <div class="pairing-item-name">${escHtml(name)}</div>
+        ${meta ? `<div class="pairing-item-meta">${escHtml(meta)}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    // Body text
+    const bodyParts = [];
+    if (outfit.why)        bodyParts.push(outfit.why);
+    if (outfit.tip)        bodyParts.push(`💡 ${outfit.tip}`);
+    if (outfit.tuck)       bodyParts.push(`👔 Tuck: ${outfit.tuck}`);
+    if (outfit.scoreReason) bodyParts.push(`★ ${outfit.scoreReason}`);
+
+    rBody.innerHTML = `
+      ${imageThumbs ? `<div class="pairing-image-strip" style="margin-bottom:12px;">${imageThumbs}</div>` : ''}
+      <div class="pairing-items-list" style="margin-bottom:12px;">${itemRows}</div>
+      <div style="font-size:14px;color:var(--text-muted);line-height:1.75;white-space:pre-wrap;">${escHtml(bodyParts.join('\n\n'))}</div>`;
+
+    rPieces.innerHTML = '';
+
+    // Seed follow-up chat
+    initOutfitChat(`${outfit.title}\n\n${outfit.why}\nItems: ${itemNames.join(', ')}\nTuck: ${outfit.tuck}\nScore: ${outfit.score}/10`);
 
   } catch(err) {
     rTitle.textContent = 'Something went wrong';
