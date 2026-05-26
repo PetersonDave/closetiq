@@ -359,7 +359,45 @@ section + section { padding-top: 0; }
 .pairing-item-name { font-size: 13px; color: var(--text); flex: 1; }
 .pairing-item-meta { font-size: 11px; color: var(--text-dim); }
 
-/* Shopping recommendation cards */
+/* Shopping list tab */
+.shop-list-card {
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+}
+.shop-list-card.checked { opacity: 0.5; }
+.shop-list-card-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.shop-list-check {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  border: 1.5px solid var(--border-hover); background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+}
+.shop-list-check.done { background: var(--success); border-color: var(--success); color: #fff; font-size: 11px; }
+.shop-list-card-body { flex: 1; }
+.shop-list-card-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.shop-list-card-why { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+.shop-list-card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.shop-list-card-anchor { font-size: 11px; color: var(--text-dim); }
+.shop-list-remove-btn {
+  background: none; border: none; color: var(--text-dim); font-size: 13px;
+  cursor: pointer; padding: 0; -webkit-tap-highlight-color: transparent;
+}
+.shop-list-remove-btn:active { color: var(--danger); }
+.shop-list-img {
+  width: 100%; aspect-ratio: 1/1; object-fit: cover;
+  border-radius: var(--radius-sm); margin-bottom: 10px;
+  border: 0.5px solid var(--border); background: var(--surface2); display: block;
+}
+.add-to-list-btn {
+  width: 100%; margin-top: 10px; padding: 9px;
+  background: none; border: 0.5px solid var(--success);
+  color: var(--success); border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+  letter-spacing: 0.3px;
+}
+.add-to-list-btn:active { background: rgba(107,191,142,0.1); }
+.add-to-list-btn.added { border-color: var(--text-dim); color: var(--text-dim); cursor: default; }
 .shop-section-label {
   font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
   color: var(--text-dim); font-weight: 500; margin: 20px 0 10px;
@@ -572,6 +610,7 @@ section + section { padding-top: 0; }
   <div class="tab-bar">
     <button class="tab-btn active" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Best Pairings</button>
     <button class="tab-btn" id="tabOutfitBtn" onclick="switchTab('outfit')">👕 Outfit Builder</button>
+    <button class="tab-btn" id="tabShopBtn" onclick="switchTab('shop')">🛒 Shopping List</button>
   </div>
 
   <!-- ── TAB: Outfit Builder ── -->
@@ -768,6 +807,25 @@ section + section { padding-top: 0; }
 
   </div><!-- end tabPairings -->
 
+  <!-- ── TAB: Shopping List ── -->
+  <div class="tab-panel" id="tabShop">
+    <section>
+      <div class="section-label">
+        <div class="section-label-left">
+          Shopping list
+          <span id="shopListBadge" style="display:none" class="count-badge">0</span>
+        </div>
+        <button class="clear-btn" id="shopListClearBtn" onclick="clearShoppingList()" style="display:none;">Clear all</button>
+      </div>
+      <div id="shopListEmpty" style="text-align:center;padding:40px 20px;color:var(--text-dim);font-size:13px;line-height:1.6;">
+        <div style="font-size:36px;margin-bottom:12px;">🛒</div>
+        <div>No items yet.</div>
+        <div style="margin-top:4px;font-size:12px;">Tap "Save to list" on any shopping recommendation in Best Pairings.</div>
+      </div>
+      <div id="shopListGrid"></div>
+    </section>
+  </div><!-- end tabShop -->
+
 </div>
 
 <div class="toast" id="toast"></div>
@@ -836,9 +894,12 @@ section + section { padding-top: 0; }
 
 <script>
 // ─── Constants ────────────────────────────────────────────────
-const LS_KEY_WARDROBE = 'closetiq_wardrobe_v3';
-const LS_KEY_APIKEY   = 'closetiq_apikey';
-const LS_KEY_INSTALL  = 'closetiq_install_dismissed';
+const LS_KEY_WARDROBE    = 'closetiq_wardrobe_v3';
+const LS_KEY_APIKEY      = 'closetiq_apikey';
+const LS_KEY_INSTALL     = 'closetiq_install_dismissed';
+const LS_KEY_SHOPLIST    = 'closetiq_shoplist_v1';
+const LS_KEY_REC_CACHE   = 'closetiq_rec_cache_v1';
+const CACHE_TTL_MS       = 30 * 24 * 60 * 60 * 1000; // 30 days
 const MAX_IMAGES_TO_AI = 8;
 const COMPRESS_DIM     = 480;
 const COMPRESS_QUALITY = 0.72;
@@ -867,7 +928,7 @@ const state = {
 };
 
 // ─── Init ─────────────────────────────────────────────────────
-function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); renderPairingWardrobe(); }
+function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); renderPairingWardrobe(); updateShopListBadge(); cachePrune(); }
 
 // ─── API Key ──────────────────────────────────────────────────
 function loadApiKey() {
@@ -1104,6 +1165,7 @@ function handleUpload(e) {
       if (++done === files.length) {
         renderWardrobe(); updateCTA(); persistWardrobe();
         showToast(`${files.length} item${files.length > 1 ? 's' : ''} added — analyzing…`);
+        cacheClearAll(); // new wardrobe item invalidates all recommendations
       }
       autoTag(garment);
     };
@@ -1316,9 +1378,11 @@ function deleteFromModal() {
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Btn').classList.add('active');
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  const capTab = tab.charAt(0).toUpperCase() + tab.slice(1);
+  document.getElementById('tab' + capTab + 'Btn').classList.add('active');
+  document.getElementById('tab' + capTab).classList.add('active');
   if (tab === 'pairings') renderPairingWardrobe();
+  if (tab === 'shop') renderShoppingList();
 }
 
 // ─── Pairing mode ─────────────────────────────────────────────
@@ -1424,29 +1488,38 @@ STRICT RULES:
 - Do not include any text outside the --- and === blocks.`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': state.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 2200,
-        messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: prompt }] }]
-      })
-    });
+    const cacheKey    = buildPairingsCacheKey(itemId);
+    const cachedText  = cacheGet(cacheKey);
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    if (cachedText) {
+      renderPairings(cachedText, anchor.name);
+      showToast('Loaded from cache', 2000);
+    } else {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': state.apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 2200,
+          messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: prompt }] }]
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const text = data?.content?.[0]?.text || '';
+      cacheSet(cacheKey, text);
+      renderPairings(text, anchor.name);
     }
-
-    const data = await res.json();
-    const text = data?.content?.[0]?.text || '';
-    renderPairings(text, anchor.name);
 
   } catch(err) {
     list.innerHTML = `<div class="pairing-loading" style="color:var(--danger);">Error: ${escHtml(err.message)}</div>`;
@@ -1552,10 +1625,12 @@ function renderPairings(text, anchorName) {
   const shopHTML = shopItems.length > 0 ? `
     <div class="shop-section-label">Consider buying</div>
     ${shopItems.map((s, si) => {
+      const itemId = `shop_${Date.now()}_${si}`;
+      const alreadyAdded = loadShopList().find(i => i.name === s.item);
       const pairTags = s.pairs.split(',').map(t => t.trim()).filter(Boolean)
         .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
       return `
-        <div class="shop-card" id="shop-card-${si}">
+        <div class="shop-card" id="shop-card-${si}" data-item-id="${itemId}" data-item-name="${escHtml(s.item)}" data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs)}" data-anchor="${escHtml(anchorName)}">
           <div class="shop-product-img-placeholder" id="shop-img-${si}">🛍️</div>
           <div class="shop-card-header">
             <div class="shop-card-title">🛍️ ${escHtml(s.item)}</div>
@@ -1563,6 +1638,8 @@ function renderPairings(text, anchorName) {
           </div>
           <div class="shop-why">${escHtml(s.why)}</div>
           ${pairTags ? `<div class="shop-pairs-label">Also pairs with</div><div class="shop-pairs">${pairTags}</div>` : ''}
+          <button class="add-to-list-btn${alreadyAdded ? ' added' : ''}" id="add-btn-${si}"
+            onclick="handleAddToList(${si})">${alreadyAdded ? '✓ Added to list' : '+ Save to Shopping List'}</button>
         </div>`;
     }).join('')}` : '';
 
@@ -1573,6 +1650,32 @@ function renderPairings(text, anchorName) {
 
   // Fetch product images asynchronously after render
   shopItems.forEach((s, si) => fetchProductImage(s.item, si));
+}
+
+function handleAddToList(si) {
+  const card    = document.getElementById(`shop-card-${si}`);
+  const btn     = document.getElementById(`add-btn-${si}`);
+  const imgEl   = document.getElementById(`shop-img-${si}`);
+  if (!card) return;
+
+  const imgSrc = imgEl?.tagName === 'IMG' ? imgEl.src : null;
+  const item = {
+    id:         card.dataset.itemId || `shop_${Date.now()}_${si}`,
+    name:       card.dataset.itemName,
+    why:        card.dataset.itemWhy,
+    pairs:      card.dataset.itemPairs,
+    anchorName: card.dataset.anchor,
+    imgSrc,
+    checked:    false,
+    addedAt:    Date.now()
+  };
+
+  const added = addToShoppingList(item);
+  if (added) {
+    btn.textContent = '✓ Added to list';
+    btn.classList.add('added');
+    showToast('Saved to Shopping List');
+  }
 }
 
 async function fetchProductImage(query, index) {
@@ -1827,33 +1930,42 @@ Return this exact JSON shape:
 }`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': state.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 700,
-        messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: promptText }] }]
-      })
-    });
+    const cacheKey    = buildOutfitCacheKey();
+    const cachedOutfit = cacheGet(cacheKey);
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-    const raw  = data?.content?.[0]?.text || '';
     let outfit;
-    try {
-      outfit = JSON.parse(raw.replace(/```json|```/g, '').trim());
-    } catch {
-      throw new Error('Could not parse AI response. Try again.');
+    if (cachedOutfit) {
+      outfit = cachedOutfit;
+      showToast('Loaded from cache', 2000);
+    } else {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': state.apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 700,
+          messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: promptText }] }]
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const raw  = data?.content?.[0]?.text || '';
+      try {
+        outfit = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      } catch {
+        throw new Error('Could not parse AI response. Try again.');
+      }
+      cacheSet(cacheKey, outfit);
     }
 
     // Title
@@ -1939,6 +2051,157 @@ function showToast(msg, dur = 2800) {
   t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ─── Shopping list ────────────────────────────────────────────
+function loadShopList() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY_SHOPLIST) || '[]'); }
+  catch { return []; }
+}
+function saveShopList(list) {
+  localStorage.setItem(LS_KEY_SHOPLIST, JSON.stringify(list));
+}
+function addToShoppingList(item) {
+  // item: { id, name, why, pairs, imgSrc, anchorName, checked }
+  const list = loadShopList();
+  if (list.find(i => i.id === item.id)) return false; // already added
+  list.unshift(item);
+  saveShopList(list);
+  updateShopListBadge();
+  return true;
+}
+function updateShopListBadge() {
+  const list  = loadShopList();
+  const badge = document.getElementById('shopListBadge');
+  const btn   = document.getElementById('tabShopBtn');
+  const n     = list.length;
+  if (badge) { badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none'; }
+  if (btn)   { btn.textContent = `🛒 Shopping List${n > 0 ? ` (${n})` : ''}`; }
+}
+function renderShoppingList() {
+  const list     = loadShopList();
+  const grid     = document.getElementById('shopListGrid');
+  const empty    = document.getElementById('shopListEmpty');
+  const clearBtn = document.getElementById('shopListClearBtn');
+  const badge    = document.getElementById('shopListBadge');
+  const n        = list.length;
+
+  badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none';
+  clearBtn.style.display = n > 0 ? 'inline' : 'none';
+  empty.style.display = n === 0 ? 'block' : 'none';
+  grid.style.display  = n > 0 ? 'block' : 'none';
+
+  grid.innerHTML = list.map((item, idx) => {
+    const imgEl = item.imgSrc
+      ? `<img class="shop-list-img" src="${escHtml(item.imgSrc)}" alt="${escHtml(item.name)}" loading="lazy" onerror="this.style.display='none'">`
+      : `<div style="font-size:28px;text-align:center;padding:12px 0;color:var(--text-dim);">🛍️</div>`;
+    const pairTags = (item.pairs || '').split(',').map(t => t.trim()).filter(Boolean)
+      .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
+    return `
+      <div class="shop-list-card${item.checked ? ' checked' : ''}" id="sli-${item.id}">
+        ${imgEl}
+        <div class="shop-list-card-header">
+          <button class="shop-list-check${item.checked ? ' done' : ''}" onclick="toggleShopItem('${item.id}')" title="Mark done">
+            ${item.checked ? '✓' : ''}
+          </button>
+          <div class="shop-list-card-body">
+            <div class="shop-list-card-title">${escHtml(item.name)}</div>
+            <div class="shop-list-card-why">${escHtml(item.why)}</div>
+          </div>
+        </div>
+        ${pairTags ? `<div class="shop-pairs-label" style="margin-top:6px;">Pairs with</div><div class="shop-pairs">${pairTags}</div>` : ''}
+        <div class="shop-list-card-meta">
+          <span class="shop-list-card-anchor">${item.anchorName ? `For: ${escHtml(item.anchorName)}` : ''}</span>
+          <button class="shop-list-remove-btn" onclick="removeShopItem('${item.id}')">✕ Remove</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+function toggleShopItem(id) {
+  const list = loadShopList();
+  const item = list.find(i => i.id === id);
+  if (item) { item.checked = !item.checked; saveShopList(list); renderShoppingList(); }
+}
+function removeShopItem(id) {
+  const list = loadShopList().filter(i => i.id !== id);
+  saveShopList(list);
+  renderShoppingList();
+  updateShopListBadge();
+}
+function clearShoppingList() {
+  if (!confirm('Clear your entire shopping list?')) return;
+  saveShopList([]);
+  renderShoppingList();
+  updateShopListBadge();
+}
+
+// ─── Recommendation cache ──────────────────────────────────────
+function cacheGet(key) {
+  try {
+    const raw = localStorage.getItem(LS_KEY_REC_CACHE);
+    const store = raw ? JSON.parse(raw) : {};
+    const entry = store[key];
+    if (!entry) return null;
+    if (Date.now() - entry.ts > CACHE_TTL_MS) {
+      delete store[key];
+      localStorage.setItem(LS_KEY_REC_CACHE, JSON.stringify(store));
+      return null;
+    }
+    return entry.data;
+  } catch { return null; }
+}
+
+function cacheSet(key, data) {
+  try {
+    const raw   = localStorage.getItem(LS_KEY_REC_CACHE);
+    const store = raw ? JSON.parse(raw) : {};
+    store[key]  = { ts: Date.now(), data };
+    localStorage.setItem(LS_KEY_REC_CACHE, JSON.stringify(store));
+  } catch { /* storage full — skip caching */ }
+}
+
+function cacheClearAll() {
+  localStorage.removeItem(LS_KEY_REC_CACHE);
+}
+
+function cachePrune() {
+  // Remove any entries older than TTL
+  try {
+    const raw   = localStorage.getItem(LS_KEY_REC_CACHE);
+    if (!raw) return;
+    const store = JSON.parse(raw);
+    const now   = Date.now();
+    let pruned  = false;
+    for (const key of Object.keys(store)) {
+      if (now - store[key].ts > CACHE_TTL_MS) { delete store[key]; pruned = true; }
+    }
+    if (pruned) localStorage.setItem(LS_KEY_REC_CACHE, JSON.stringify(store));
+  } catch {}
+}
+
+function buildOutfitCacheKey() {
+  // Fingerprint: sorted wardrobe IDs + occasion + tod + setting + prefs + anchors
+  const wardrobeFingerprint = [...state.garments].sort((a,b) => a.id.localeCompare(b.id)).map(g => g.id).join(',');
+  const prefsStr  = JSON.stringify(state.stylePrefs);
+  const anchorsStr = JSON.stringify(state.anchors);
+  const str = [wardrobeFingerprint, state.occasion, state.tod, state.setting, prefsStr, anchorsStr].join('|');
+  return 'outfit_' + simpleHash(str);
+}
+
+function buildPairingsCacheKey(anchorId) {
+  const wardrobeFingerprint = [...state.garments].sort((a,b) => a.id.localeCompare(b.id)).map(g => g.id).join(',');
+  const str = [anchorId, wardrobeFingerprint, state.occasion, state.tod, state.setting].join('|');
+  return 'pairs_' + simpleHash(str);
+}
+
+function simpleHash(str) {
+  // Fast non-cryptographic hash (djb2)
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+    hash = hash >>> 0; // keep unsigned 32-bit
+  }
+  return hash.toString(36);
 }
 
 // ─── Boot ─────────────────────────────────────────────────────
