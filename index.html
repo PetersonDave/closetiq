@@ -338,11 +338,11 @@ section + section { padding-top: 0; }
   z-index: 99;
 }
 .tab-btn {
-  flex: 1; padding: 12px 8px; background: none; border: none;
-  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  flex: 1; padding: 12px 4px; background: none; border: none;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
   color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent;
   transition: all 0.15s; -webkit-tap-highlight-color: transparent;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .tab-btn.active { color: var(--accent-text); border-bottom-color: var(--accent); }
 .tab-panel { display: none; }
@@ -608,9 +608,9 @@ section + section { padding-top: 0; }
 
   <!-- Tab bar -->
   <div class="tab-bar">
-    <button class="tab-btn active" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Best Pairings</button>
-    <button class="tab-btn" id="tabOutfitBtn" onclick="switchTab('outfit')">👕 Outfit Builder</button>
-    <button class="tab-btn" id="tabShopBtn" onclick="switchTab('shop')">🛒 Shopping List</button>
+    <button class="tab-btn active" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Pairings</button>
+    <button class="tab-btn" id="tabOutfitBtn" onclick="switchTab('outfit')">👕 Outfits</button>
+    <button class="tab-btn" id="tabShopBtn" onclick="switchTab('shop')">🛒 Shopping</button>
   </div>
 
   <!-- ── TAB: Outfit Builder ── -->
@@ -760,6 +760,17 @@ section + section { padding-top: 0; }
           </div>
         </div>
       </div>
+      <!-- Outfit shopping recommendations -->
+      <div id="outfitShopSection" style="display:none; margin-top:0;">
+        <div id="outfitShopList"></div>
+      </div>
+    </section>
+
+    <!-- Cache clear for outfit tab -->
+    <section id="outfitCacheSection" style="display:none; padding-top:0;">
+      <div style="text-align:center;">
+        <button class="clear-btn" onclick="clearOutfitCache()" style="font-size:11px;color:var(--text-dim);">🗑 Clear outfit recommendation cache</button>
+      </div>
     </section>
 
   </div><!-- end tabOutfit -->
@@ -789,7 +800,10 @@ section + section { padding-top: 0; }
     <section id="pairingsSection" style="display:none; padding-top:0;">
       <div class="section-label" style="margin-bottom:14px;">
         <div id="pairingsTitle">Best pairings</div>
-        <button class="clear-btn" onclick="closePairings()">✕ Clear</button>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="clear-btn" onclick="clearPairingsCache()" style="font-size:10px;">🗑 Clear cache</button>
+          <button class="clear-btn" onclick="closePairings()">✕ Clear</button>
+        </div>
       </div>
       <div id="pairingsList"></div>
       <div class="result-card" id="pairingsChatCard" style="display:none; margin-top:12px;">
@@ -1926,8 +1940,16 @@ Return this exact JSON shape:
   "tip": "one practical styling tip",
   "tuck": "tucked in or untucked, with one sentence why",
   "score": 8,
-  "scoreReason": "one sentence explaining the score"
-}`;
+  "scoreReason": "one sentence explaining the score",
+  "shopping": [
+    {
+      "item": "specific item to buy, e.g. Slim-fit navy chinos",
+      "why": "1-2 sentences why this purchase elevates the outfit and what score it would unlock",
+      "pairs": "comma-separated existing wardrobe items it pairs with"
+    }
+  ]
+}
+Include 1-3 shopping suggestions for items NOT in the wardrobe that would push the outfit closer to a 10/10. If the outfit is already a 9 or 10, include 1 aspirational upgrade.`;
 
   try {
     const cacheKey    = buildOutfitCacheKey();
@@ -2030,6 +2052,41 @@ Return this exact JSON shape:
 
     rPieces.innerHTML = '';
 
+    // Shopping recommendations
+    const outfitShopSection = document.getElementById('outfitShopSection');
+    const outfitShopList    = document.getElementById('outfitShopList');
+    if (outfit.shopping && outfit.shopping.length > 0) {
+      const shopItems = outfit.shopping;
+      const shopHTML  = `
+        <div class="shop-section-label">Consider buying</div>
+        ${shopItems.map((s, si) => {
+          const itemId     = `ofit_${Date.now()}_${si}`;
+          const alreadyAdded = loadShopList().find(i => i.name === s.item);
+          const pairTags   = (s.pairs || '').split(',').map(t => t.trim()).filter(Boolean)
+            .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
+          return `
+            <div class="shop-card" id="ofit-card-${si}" data-item-id="${itemId}" data-item-name="${escHtml(s.item)}" data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs || '')}" data-anchor="Outfit Builder">
+              <div class="shop-product-img-placeholder" id="ofit-img-${si}">🛍️</div>
+              <div class="shop-card-header">
+                <div class="shop-card-title">🛍️ ${escHtml(s.item)}</div>
+                <div class="shop-badge">Near 10/10</div>
+              </div>
+              <div class="shop-why">${escHtml(s.why)}</div>
+              ${pairTags ? `<div class="shop-pairs-label">Also pairs with</div><div class="shop-pairs">${pairTags}</div>` : ''}
+              <button class="add-to-list-btn${alreadyAdded ? ' added' : ''}" id="ofit-add-btn-${si}"
+                onclick="handleOutfitAddToList(${si})">${alreadyAdded ? '✓ Added to list' : '+ Save to Shopping List'}</button>
+            </div>`;
+        }).join('')}`;
+      outfitShopList.innerHTML = shopHTML;
+      outfitShopSection.style.display = 'block';
+      shopItems.forEach((s, si) => fetchOutfitProductImage(s.item, si));
+    } else {
+      outfitShopSection.style.display = 'none';
+    }
+
+    // Show cache clear button
+    document.getElementById('outfitCacheSection').style.display = 'block';
+
     // Seed follow-up chat
     initOutfitChat(`${outfit.title}\n\n${outfit.why}\nItems: ${itemNames.join(', ')}\nTuck: ${outfit.tuck}\nScore: ${outfit.score}/10`);
 
@@ -2042,6 +2099,69 @@ Return this exact JSON shape:
   btn.textContent = 'Suggest another outfit';
   updateCTA();
   rs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function handleOutfitAddToList(si) {
+  const card   = document.getElementById(`ofit-card-${si}`);
+  const btn    = document.getElementById(`ofit-add-btn-${si}`);
+  const imgEl  = document.getElementById(`ofit-img-${si}`);
+  if (!card) return;
+  const imgSrc = imgEl?.tagName === 'IMG' ? imgEl.src : null;
+  const item = {
+    id:         card.dataset.itemId || `ofit_${Date.now()}_${si}`,
+    name:       card.dataset.itemName,
+    why:        card.dataset.itemWhy,
+    pairs:      card.dataset.itemPairs,
+    anchorName: card.dataset.anchor,
+    imgSrc,
+    checked:    false,
+    addedAt:    Date.now()
+  };
+  const added = addToShoppingList(item);
+  if (added) {
+    btn.textContent = '✓ Added to list';
+    btn.classList.add('added');
+    showToast('Saved to Shopping List');
+  }
+}
+
+async function fetchOutfitProductImage(query, index) {
+  const el = document.getElementById(`ofit-img-${index}`);
+  if (!el) return;
+  try {
+    const q   = encodeURIComponent(query.replace(/['"]/g, '').trim());
+    const src = `https://source.unsplash.com/400x400/?${q},clothing,fashion`;
+    el.outerHTML = `<img class="shop-product-img" src="${src}" alt="${escHtml(query)}" loading="lazy" onerror="this.outerHTML='<div class=\\'shop-product-img-placeholder\\'>🛍️</div>'">`;
+  } catch { /* keep placeholder */ }
+}
+
+function clearOutfitCache() {
+  if (!confirm('Clear cached outfit recommendations? The next suggestion will make a fresh AI call.')) return;
+  // Remove only outfit_ keys
+  try {
+    const raw   = localStorage.getItem(LS_KEY_REC_CACHE);
+    const store = raw ? JSON.parse(raw) : {};
+    let cleared = 0;
+    for (const key of Object.keys(store)) {
+      if (key.startsWith('outfit_')) { delete store[key]; cleared++; }
+    }
+    localStorage.setItem(LS_KEY_REC_CACHE, JSON.stringify(store));
+    showToast(`Cleared ${cleared} cached outfit recommendation${cleared !== 1 ? 's' : ''}`);
+  } catch { showToast('Cache cleared'); }
+}
+
+function clearPairingsCache() {
+  if (!confirm('Clear cached pairing recommendations? The next pairing will make a fresh AI call.')) return;
+  try {
+    const raw   = localStorage.getItem(LS_KEY_REC_CACHE);
+    const store = raw ? JSON.parse(raw) : {};
+    let cleared = 0;
+    for (const key of Object.keys(store)) {
+      if (key.startsWith('pairs_')) { delete store[key]; cleared++; }
+    }
+    localStorage.setItem(LS_KEY_REC_CACHE, JSON.stringify(store));
+    showToast(`Cleared ${cleared} cached pairing recommendation${cleared !== 1 ? 's' : ''}`);
+  } catch { showToast('Cache cleared'); }
 }
 
 // ─── Toast ────────────────────────────────────────────────────
@@ -2076,7 +2196,7 @@ function updateShopListBadge() {
   const btn   = document.getElementById('tabShopBtn');
   const n     = list.length;
   if (badge) { badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none'; }
-  if (btn)   { btn.textContent = `🛒 Shopping List${n > 0 ? ` (${n})` : ''}`; }
+  if (btn)   { btn.textContent = `🛒 Shopping${n > 0 ? ` (${n})` : ''}`; }
 }
 function renderShoppingList() {
   const list     = loadShopList();
