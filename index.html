@@ -331,7 +331,33 @@ section + section { padding-top: 0; }
   animation: spin 0.7s linear infinite; flex-shrink: 0;
 }
 
-/* Pairing cards */
+/* Tab bar */
+.tab-bar {
+  display: flex; border-bottom: 0.5px solid var(--border);
+  background: var(--bg); position: sticky; top: calc(52px + var(--safe-top));
+  z-index: 99;
+}
+.tab-btn {
+  flex: 1; padding: 12px 8px; background: none; border: none;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.2px;
+}
+.tab-btn.active { color: var(--accent-text); border-bottom-color: var(--accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Pairing item row */
+.pairing-items-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 4px; }
+.pairing-item-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.pairing-item-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
+.pairing-item-name { font-size: 13px; color: var(--text); flex: 1; }
+.pairing-item-meta { font-size: 11px; color: var(--text-dim); }
 .pairing-card {
   background: var(--surface); border: 0.5px solid var(--border);
   border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
@@ -443,157 +469,185 @@ section + section { padding-top: 0; }
     </div>
   </div>
 
-  <!-- Occasion -->
-  <section>
-    <div class="section-label">Occasion</div>
-    <div class="occasion-grid">
-      <button class="occasion-btn" data-occasion="Work" onclick="selectOccasion(this)"><span class="icon">💼</span><span class="label">Work</span></button>
-      <button class="occasion-btn" data-occasion="Casual" onclick="selectOccasion(this)"><span class="icon">☀️</span><span class="label">Casual</span></button>
-      <button class="occasion-btn" data-occasion="Dining" onclick="selectOccasion(this)"><span class="icon">🍷</span><span class="label">Dining</span></button>
-      <button class="occasion-btn" data-occasion="Night Out" onclick="selectOccasion(this)"><span class="icon">🌙</span><span class="label">Night out</span></button>
-      <button class="occasion-btn" data-occasion="Social" onclick="selectOccasion(this)"><span class="icon">🎉</span><span class="label">Social</span></button>
-      <button class="occasion-btn" data-occasion="Travel" onclick="selectOccasion(this)"><span class="icon">✈️</span><span class="label">Travel</span></button>
-      <button class="occasion-btn" data-occasion="Contemporary Casual" onclick="selectOccasion(this)"><span class="icon">🧥</span><span class="label">Contemp. casual</span></button>
-      <button class="occasion-btn" data-occasion="Cocktail Attire" onclick="selectOccasion(this)"><span class="icon">🥂</span><span class="label">Cocktail</span></button>
-      <button class="occasion-btn" data-occasion="Semi-Formal" onclick="selectOccasion(this)"><span class="icon">👔</span><span class="label">Semi-formal</span></button>
-    </div>
-    <div class="section-label" style="margin-top:16px;">Time of day</div>
-    <div class="tod-grid">
-      <button class="tod-btn" data-tod="Day" onclick="selectTod(this)"><span class="icon">🌤️</span><span class="label">Day</span></button>
-      <button class="tod-btn" data-tod="Evening" onclick="selectTod(this)"><span class="icon">🌆</span><span class="label">Evening</span></button>
-    </div>
-    <div class="section-label" style="margin-top:16px;">Setting</div>
-    <div class="occasion-grid">
-      <button class="occasion-btn" data-setting="Country Club" onclick="selectSetting(this)"><span class="icon">⛳</span><span class="label">Country club</span></button>
-      <button class="occasion-btn" data-setting="Corporate Office" onclick="selectSetting(this)"><span class="icon">🏢</span><span class="label">Corp. office</span></button>
-      <button class="occasion-btn" data-setting="Business Meeting" onclick="selectSetting(this)"><span class="icon">🤝</span><span class="label">Biz meeting</span></button>
-      <button class="occasion-btn" data-setting="Upscale Restaurant" onclick="selectSetting(this)"><span class="icon">🍽️</span><span class="label">Upscale dining</span></button>
-      <button class="occasion-btn" data-setting="Casual Restaurant" onclick="selectSetting(this)"><span class="icon">🍔</span><span class="label">Casual dining</span></button>
-      <button class="occasion-btn" data-setting="Friend's Home" onclick="selectSetting(this)"><span class="icon">🏠</span><span class="label">Friend's home</span></button>
-      <button class="occasion-btn" data-setting="Outdoor / Nature" onclick="selectSetting(this)"><span class="icon">🌿</span><span class="label">Outdoor</span></button>
-      <button class="occasion-btn" data-setting="Bar / Lounge" onclick="selectSetting(this)"><span class="icon">🍸</span><span class="label">Bar / lounge</span></button>
-      <button class="occasion-btn" data-setting="Place of Worship" onclick="selectSetting(this)"><span class="icon">🕊️</span><span class="label">Place of worship</span></button>
-    </div>
-  </section>
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabOutfitBtn" onclick="switchTab('outfit')">👕 Outfit Builder</button>
+    <button class="tab-btn" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Best Pairings</button>
+  </div>
 
-  <!-- Style Preferences -->
-  <section>
-    <div class="section-label">Style preferences <span style="color:var(--text-dim);font-size:9px;letter-spacing:0;text-transform:none;font-weight:400;">optional — tap to select, tap again to clear</span></div>
+  <!-- ── TAB: Outfit Builder ── -->
+  <div class="tab-panel active" id="tabOutfit">
 
-    <div class="pref-group-label">Bottoms</div>
-    <div class="pref-chips" id="prefBottoms">
-      <button class="pref-chip" data-pref-group="bottom" data-pref="Jeans" onclick="selectPref(this)">Jeans</button>
-      <button class="pref-chip" data-pref-group="bottom" data-pref="Chinos" onclick="selectPref(this)">Chinos</button>
-      <button class="pref-chip" data-pref-group="bottom" data-pref="Dress Pants" onclick="selectPref(this)">Dress pants</button>
-      <button class="pref-chip" data-pref-group="bottom" data-pref="Shorts" onclick="selectPref(this)">Shorts</button>
-    </div>
-
-    <div class="pref-group-label" style="margin-top:12px;">Tops</div>
-    <div class="pref-chips" id="prefTops">
-      <button class="pref-chip" data-pref-group="top" data-pref="Button-Down Shirt" onclick="selectPref(this)">Button-down</button>
-      <button class="pref-chip" data-pref-group="top" data-pref="Polo Shirt" onclick="selectPref(this)">Polo</button>
-      <button class="pref-chip" data-pref-group="top" data-pref="T-Shirt" onclick="selectPref(this)">T-shirt</button>
-      <button class="pref-chip" data-pref-group="top" data-pref="Sweater" onclick="selectPref(this)">Sweater</button>
-    </div>
-
-    <div class="pref-group-label" style="margin-top:12px;">Shoes</div>
-    <div class="pref-chips" id="prefShoes">
-      <button class="pref-chip" data-pref-group="shoes" data-pref="Dress Shoes" onclick="selectPref(this)">Dress shoes</button>
-      <button class="pref-chip" data-pref-group="shoes" data-pref="Loafers" onclick="selectPref(this)">Loafers</button>
-      <button class="pref-chip" data-pref-group="shoes" data-pref="Casual Shoes" onclick="selectPref(this)">Casual shoes</button>
-      <button class="pref-chip" data-pref-group="shoes" data-pref="Sneakers" onclick="selectPref(this)">Sneakers</button>
-      <button class="pref-chip" data-pref-group="shoes" data-pref="Boots" onclick="selectPref(this)">Boots</button>
-    </div>
-
-    <div class="pref-group-label" style="margin-top:12px;">Shirt tuck</div>
-    <div class="pref-chips" id="prefTuck">
-      <button class="pref-chip" data-pref-group="tuck" data-pref="Tucked in" onclick="selectPref(this)">Tucked in</button>
-      <button class="pref-chip" data-pref-group="tuck" data-pref="Untucked" onclick="selectPref(this)">Untucked</button>
-      <button class="pref-chip" data-pref-group="tuck" data-pref="AI decides" onclick="selectPref(this)">AI decides</button>
-    </div>
-  </section>
-
-  <!-- Generate button -->
-  <section>
-    <div class="divider"></div>
-    <button class="cta-btn" id="suggestBtn" onclick="getSuggestion()" disabled>Suggest an outfit</button>
-    <button class="cta-btn" id="pairingBtn" onclick="startPairingMode()" disabled style="margin-top:10px;background:var(--surface);color:var(--accent-text);border:0.5px solid var(--accent);">Best pairings for one item</button>
-  </section>
-
-  <!-- Wardrobe -->
-  <section>
-    <div class="section-label">
-      <div class="section-label-left">
-        My wardrobe
-        <span id="countBadge" style="display:none" class="count-badge">0</span>
+    <!-- Occasion -->
+    <section>
+      <div class="section-label">Occasion</div>
+      <div class="occasion-grid">
+        <button class="occasion-btn" data-occasion="Work" onclick="selectOccasion(this)"><span class="icon">💼</span><span class="label">Work</span></button>
+        <button class="occasion-btn" data-occasion="Casual" onclick="selectOccasion(this)"><span class="icon">☀️</span><span class="label">Casual</span></button>
+        <button class="occasion-btn" data-occasion="Dining" onclick="selectOccasion(this)"><span class="icon">🍷</span><span class="label">Dining</span></button>
+        <button class="occasion-btn" data-occasion="Night Out" onclick="selectOccasion(this)"><span class="icon">🌙</span><span class="label">Night out</span></button>
+        <button class="occasion-btn" data-occasion="Social" onclick="selectOccasion(this)"><span class="icon">🎉</span><span class="label">Social</span></button>
+        <button class="occasion-btn" data-occasion="Travel" onclick="selectOccasion(this)"><span class="icon">✈️</span><span class="label">Travel</span></button>
+        <button class="occasion-btn" data-occasion="Contemporary Casual" onclick="selectOccasion(this)"><span class="icon">🧥</span><span class="label">Contemp. casual</span></button>
+        <button class="occasion-btn" data-occasion="Cocktail Attire" onclick="selectOccasion(this)"><span class="icon">🥂</span><span class="label">Cocktail</span></button>
+        <button class="occasion-btn" data-occasion="Semi-Formal" onclick="selectOccasion(this)"><span class="icon">👔</span><span class="label">Semi-formal</span></button>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <button class="anchor-toggle" id="anchorToggle" onclick="toggleAnchorMode()" style="display:none;">
-          <span class="anchor-toggle-dot"></span>Pin items
-        </button>
-        <div class="storage-status">
-          <div class="storage-dot saved" id="storageDot"></div>
-          <span class="storage-label" id="storageLabel">0 items</span>
+      <div class="section-label" style="margin-top:16px;">Time of day</div>
+      <div class="tod-grid">
+        <button class="tod-btn" data-tod="Day" onclick="selectTod(this)"><span class="icon">🌤️</span><span class="label">Day</span></button>
+        <button class="tod-btn" data-tod="Evening" onclick="selectTod(this)"><span class="icon">🌆</span><span class="label">Evening</span></button>
+      </div>
+      <div class="section-label" style="margin-top:16px;">Setting</div>
+      <div class="occasion-grid">
+        <button class="occasion-btn" data-setting="Country Club" onclick="selectSetting(this)"><span class="icon">⛳</span><span class="label">Country club</span></button>
+        <button class="occasion-btn" data-setting="Corporate Office" onclick="selectSetting(this)"><span class="icon">🏢</span><span class="label">Corp. office</span></button>
+        <button class="occasion-btn" data-setting="Business Meeting" onclick="selectSetting(this)"><span class="icon">🤝</span><span class="label">Biz meeting</span></button>
+        <button class="occasion-btn" data-setting="Upscale Restaurant" onclick="selectSetting(this)"><span class="icon">🍽️</span><span class="label">Upscale dining</span></button>
+        <button class="occasion-btn" data-setting="Casual Restaurant" onclick="selectSetting(this)"><span class="icon">🍔</span><span class="label">Casual dining</span></button>
+        <button class="occasion-btn" data-setting="Friend's Home" onclick="selectSetting(this)"><span class="icon">🏠</span><span class="label">Friend's home</span></button>
+        <button class="occasion-btn" data-setting="Outdoor / Nature" onclick="selectSetting(this)"><span class="icon">🌿</span><span class="label">Outdoor</span></button>
+        <button class="occasion-btn" data-setting="Bar / Lounge" onclick="selectSetting(this)"><span class="icon">🍸</span><span class="label">Bar / lounge</span></button>
+        <button class="occasion-btn" data-setting="Place of Worship" onclick="selectSetting(this)"><span class="icon">🕊️</span><span class="label">Place of worship</span></button>
+      </div>
+    </section>
+
+    <!-- Style Preferences -->
+    <section>
+      <div class="section-label">Style preferences <span style="color:var(--text-dim);font-size:9px;letter-spacing:0;text-transform:none;font-weight:400;">optional — tap to select, tap again to clear</span></div>
+      <div class="pref-group-label">Bottoms</div>
+      <div class="pref-chips">
+        <button class="pref-chip" data-pref-group="bottom" data-pref="Jeans" onclick="selectPref(this)">Jeans</button>
+        <button class="pref-chip" data-pref-group="bottom" data-pref="Chinos" onclick="selectPref(this)">Chinos</button>
+        <button class="pref-chip" data-pref-group="bottom" data-pref="Dress Pants" onclick="selectPref(this)">Dress pants</button>
+        <button class="pref-chip" data-pref-group="bottom" data-pref="Shorts" onclick="selectPref(this)">Shorts</button>
+      </div>
+      <div class="pref-group-label" style="margin-top:12px;">Tops</div>
+      <div class="pref-chips">
+        <button class="pref-chip" data-pref-group="top" data-pref="Button-Down Shirt" onclick="selectPref(this)">Button-down</button>
+        <button class="pref-chip" data-pref-group="top" data-pref="Polo Shirt" onclick="selectPref(this)">Polo</button>
+        <button class="pref-chip" data-pref-group="top" data-pref="T-Shirt" onclick="selectPref(this)">T-shirt</button>
+        <button class="pref-chip" data-pref-group="top" data-pref="Sweater" onclick="selectPref(this)">Sweater</button>
+      </div>
+      <div class="pref-group-label" style="margin-top:12px;">Shoes</div>
+      <div class="pref-chips">
+        <button class="pref-chip" data-pref-group="shoes" data-pref="Dress Shoes" onclick="selectPref(this)">Dress shoes</button>
+        <button class="pref-chip" data-pref-group="shoes" data-pref="Loafers" onclick="selectPref(this)">Loafers</button>
+        <button class="pref-chip" data-pref-group="shoes" data-pref="Casual Shoes" onclick="selectPref(this)">Casual shoes</button>
+        <button class="pref-chip" data-pref-group="shoes" data-pref="Sneakers" onclick="selectPref(this)">Sneakers</button>
+        <button class="pref-chip" data-pref-group="shoes" data-pref="Boots" onclick="selectPref(this)">Boots</button>
+      </div>
+      <div class="pref-group-label" style="margin-top:12px;">Shirt tuck</div>
+      <div class="pref-chips">
+        <button class="pref-chip" data-pref-group="tuck" data-pref="Tucked in" onclick="selectPref(this)">Tucked in</button>
+        <button class="pref-chip" data-pref-group="tuck" data-pref="Untucked" onclick="selectPref(this)">Untucked</button>
+        <button class="pref-chip" data-pref-group="tuck" data-pref="AI decides" onclick="selectPref(this)">AI decides</button>
+      </div>
+    </section>
+
+    <!-- Generate button -->
+    <section>
+      <div class="divider"></div>
+      <button class="cta-btn" id="suggestBtn" onclick="getSuggestion()" disabled>Suggest an outfit</button>
+    </section>
+
+    <!-- Wardrobe (outfit tab) -->
+    <section>
+      <div class="section-label">
+        <div class="section-label-left">
+          My wardrobe
+          <span id="countBadge" style="display:none" class="count-badge">0</span>
         </div>
-        <button class="clear-btn" id="clearBtn" onclick="confirmClear()" style="display:none;">Clear all</button>
-      </div>
-    </div>
-    <div class="anchor-hint" id="anchorHint" style="display:none;">Tap a top, bottom, or shoes to pin it — the AI will build around your selection.</div>
-    <div class="anchor-hint" id="pairingHint" style="display:none;">Tap any item to find its best outfit pairings.</div>
-
-    <div id="analyzingBanner" style="display:none;" class="analyzing-banner">
-      <div class="analyzing-spinner"></div>
-      <span id="analyzingText">Analyzing items…</span>
-    </div>
-
-    <div id="uploadZoneWrap">
-      <div class="upload-zone">
-        <input type="file" id="fileInput" accept="image/*" multiple onchange="handleUpload(event)">
-        <div class="upload-icon">👔</div>
-        <div class="upload-text">
-          <strong>Add clothes</strong>
-          Tap to choose photos — shirts, pants, shoes, accessories
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="anchor-toggle" id="anchorToggle" onclick="toggleAnchorMode()" style="display:none;">
+            <span class="anchor-toggle-dot"></span>Pin items
+          </button>
+          <div class="storage-status">
+            <div class="storage-dot saved" id="storageDot"></div>
+            <span class="storage-label" id="storageLabel">0 items</span>
+          </div>
+          <button class="clear-btn" id="clearBtn" onclick="confirmClear()" style="display:none;">Clear all</button>
         </div>
       </div>
-    </div>
+      <div class="anchor-hint" id="anchorHint" style="display:none;">Tap a top, bottom, or shoes to pin it — the AI will build around your selection.</div>
 
-    <div id="addMoreWrap" style="display:none;">
-      <div class="upload-zone upload-zone-sm">
-        <input type="file" id="fileInputMore" accept="image/*" multiple onchange="handleUpload(event)">
-        <div class="upload-text">
-          <strong>+ Add more items</strong>
-          Choose more photos from your library
+      <div id="analyzingBanner" style="display:none;" class="analyzing-banner">
+        <div class="analyzing-spinner"></div>
+        <span id="analyzingText">Analyzing items…</span>
+      </div>
+
+      <div id="uploadZoneWrap">
+        <div class="upload-zone">
+          <input type="file" id="fileInput" accept="image/*" multiple onchange="handleUpload(event)">
+          <div class="upload-icon">👔</div>
+          <div class="upload-text">
+            <strong>Add clothes</strong>
+            Tap to choose photos — shirts, pants, shoes, accessories
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="wardrobe-grid" id="wardrobeGrid"></div>
-    <p style="font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;" id="tapHint" style="display:none;">Tap any item to edit its details</p>
-  </section>
-
-  <!-- Result -->
-  <section id="resultSection" style="display:none; padding-top:0;">
-    <div class="result-card">
-      <div class="result-header">
-        <div class="result-title" id="resultTitle"></div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
-          <div class="weather-badge" id="resultWeather" style="display:none;"></div>
-          <div class="score-badge" id="resultScore" style="display:none;"></div>
+      <div id="addMoreWrap" style="display:none;">
+        <div class="upload-zone upload-zone-sm">
+          <input type="file" id="fileInputMore" accept="image/*" multiple onchange="handleUpload(event)">
+          <div class="upload-text">
+            <strong>+ Add more items</strong>
+            Choose more photos from your library
+          </div>
         </div>
       </div>
-      <div class="result-body" id="resultBody"></div>
-      <div class="piece-tags" id="resultPieces"></div>
-    </div>
-  </section>
 
-  <!-- Pairings results -->
-  <section id="pairingsSection" style="display:none; padding-top:0;">
-    <div class="section-label" style="margin-bottom:14px;">
-      <div id="pairingsTitle">Best pairings</div>
-      <button class="clear-btn" onclick="closePairings()">✕ Close</button>
-    </div>
-    <div id="pairingsList"></div>
-  </section>
+      <div class="wardrobe-grid" id="wardrobeGrid"></div>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;" id="tapHint">Tap any item to edit its details</p>
+    </section>
+
+    <!-- Outfit result -->
+    <section id="resultSection" style="display:none; padding-top:0;">
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-title" id="resultTitle"></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
+            <div class="weather-badge" id="resultWeather" style="display:none;"></div>
+            <div class="score-badge" id="resultScore" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="result-body" id="resultBody"></div>
+        <div class="piece-tags" id="resultPieces"></div>
+      </div>
+    </section>
+
+  </div><!-- end tabOutfit -->
+
+  <!-- ── TAB: Best Pairings ── -->
+  <div class="tab-panel" id="tabPairings">
+
+    <!-- Pairings wardrobe -->
+    <section>
+      <div class="section-label">
+        <div class="section-label-left">
+          Select an item to pair
+          <span id="pairingCountBadge" style="display:none" class="count-badge">0</span>
+        </div>
+      </div>
+      <div class="anchor-hint" id="pairingHint" style="display:block;text-align:left;padding:0 0 12px;">Tap any item below to find its top 5 outfit pairings.</div>
+      <div class="wardrobe-grid" id="pairingWardrobeGrid"></div>
+      <div id="pairingUploadZone" style="display:none;">
+        <div class="upload-zone" style="pointer-events:none;opacity:0.5;">
+          <div class="upload-icon">👔</div>
+          <div class="upload-text"><strong>No items yet</strong>Add clothes in the Outfit Builder tab first.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pairings results -->
+    <section id="pairingsSection" style="display:none; padding-top:0;">
+      <div class="section-label" style="margin-bottom:14px;">
+        <div id="pairingsTitle">Best pairings</div>
+        <button class="clear-btn" onclick="closePairings()">✕ Clear</button>
+      </div>
+      <div id="pairingsList"></div>
+    </section>
+
+  </div><!-- end tabPairings -->
 
 </div>
 
@@ -690,7 +744,7 @@ const state = {
   anchorMode: false,
   anchors: { top: null, bottom: null, shoes: null },
   stylePrefs: { bottom: null, top: null, shoes: null, tuck: null },
-  pairingMode: false, pairingItemId: null
+  pairingItemId: null
 };
 
 // ─── Init ─────────────────────────────────────────────────────
@@ -796,7 +850,6 @@ function selectPref(btn) {
 function updateCTA() {
   const hasEnough = state.garments.length >= 2 && !state.loading && !!state.apiKey;
   document.getElementById('suggestBtn').disabled = !state.occasion || !hasEnough;
-  document.getElementById('pairingBtn').disabled = !hasEnough;
 }
 
 // ─── Weather ──────────────────────────────────────────────────
@@ -950,12 +1003,6 @@ function toggleAnchorMode() {
 }
 
 function handleCardTap(id) {
-  if (state.pairingMode) {
-    state.pairingItemId = id;
-    renderWardrobe();
-    getPairings(id);
-    return;
-  }
   if (!state.anchorMode) { openMetaModal(id); return; }
   const g = state.garments.find(x => x.id === id);
   if (!g) return;
@@ -981,6 +1028,12 @@ function handleCardTap(id) {
   renderWardrobe();
 }
 
+function handlePairingTap(id) {
+  state.pairingItemId = id;
+  renderPairingWardrobe();
+  getPairings(id);
+}
+
 function removeGarment(id) {
   const g = state.garments.find(x => x.id === id);
   const name = g ? g.name : 'this item';
@@ -994,6 +1047,16 @@ function removeGarment(id) {
 }
 
 // ─── Render wardrobe ──────────────────────────────────────────
+const CATEGORY_ORDER = { shoes: 0, bottom: 1, top: 2, outerwear: 3, belt: 4, accessory: 5, 'full-outfit': 6, other: 7, '': 8 };
+
+function sortedGarments() {
+  return [...state.garments].sort((a, b) => {
+    const oa = CATEGORY_ORDER[a.category] ?? 8;
+    const ob = CATEGORY_ORDER[b.category] ?? 8;
+    return oa !== ob ? oa - ob : a.name.localeCompare(b.name);
+  });
+}
+
 function renderWardrobe() {
   const grid       = document.getElementById('wardrobeGrid');
   const badge      = document.getElementById('countBadge');
@@ -1003,41 +1066,60 @@ function renderWardrobe() {
   const tapHint    = document.getElementById('tapHint');
   const anchorToggle = document.getElementById('anchorToggle');
   const anchorHint   = document.getElementById('anchorHint');
-  const pairingHint  = document.getElementById('pairingHint');
   const n          = state.garments.length;
 
   badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none';
   uploadWrap.style.display = n === 0 ? 'block' : 'none';
   addMore.style.display    = n > 0 ? 'block' : 'none';
   clearBtn.style.display   = n > 0 ? 'inline' : 'none';
-  tapHint.style.display    = n > 0 && !state.anchorMode && !state.pairingMode ? 'block' : 'none';
+  tapHint.style.display    = n > 0 && !state.anchorMode ? 'block' : 'none';
   anchorToggle.style.display = n > 0 ? 'flex' : 'none';
   anchorHint.style.display   = state.anchorMode ? 'block' : 'none';
-  pairingHint.style.display  = state.pairingMode ? 'block' : 'none';
   anchorToggle.classList.toggle('active', state.anchorMode);
 
-  grid.innerHTML = state.garments.map(g => {
+  grid.innerHTML = sortedGarments().map(g => {
     const catLabel = g.category ? CATEGORIES[g.category] || g.category : '…';
     const isAnalyzing = !g.category;
     const anchorSlot = Object.entries(state.anchors).find(([,id]) => id === g.id);
     const isAnchored = !!anchorSlot;
     const anchorLabel = anchorSlot ? anchorSlot[0] : '';
-    const isPairingSelected = state.pairingMode && state.pairingItemId === g.id;
 
     return `
-      <div class="garment-card${isAnalyzing ? ' analyzing' : ''}${isAnchored ? ' anchor-selected' : ''}${isPairingSelected ? ' pairing-candidate' : ''}"
+      <div class="garment-card${isAnalyzing ? ' analyzing' : ''}${isAnchored ? ' anchor-selected' : ''}"
            onclick="handleCardTap('${g.id}')">
         <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
         ${isAnchored
           ? `<div class="anchor-badge">📌 ${anchorLabel}</div>`
           : `<div class="garment-category-badge">${catLabel}</div>`}
         <div class="garment-label">${escHtml(g.name)}</div>
-        ${!state.anchorMode && !state.pairingMode ? '<div class="edit-icon">✏️</div>' : ''}
+        ${!state.anchorMode ? '<div class="edit-icon">✏️</div>' : ''}
         <button class="remove-btn" onclick="event.stopPropagation();removeGarment('${g.id}')" aria-label="Remove">×</button>
       </div>`;
   }).join('');
 
   if (n === 0) setStorageStatus('saved', '0 items');
+}
+
+function renderPairingWardrobe() {
+  const grid   = document.getElementById('pairingWardrobeGrid');
+  const badge  = document.getElementById('pairingCountBadge');
+  const noItem = document.getElementById('pairingUploadZone');
+  const n      = state.garments.length;
+
+  badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none';
+  noItem.style.display = n === 0 ? 'block' : 'none';
+  grid.style.display   = n > 0 ? 'grid' : 'none';
+
+  grid.innerHTML = sortedGarments().map(g => {
+    const catLabel = g.category ? CATEGORIES[g.category] || g.category : '…';
+    const isSelected = state.pairingItemId === g.id;
+    return `
+      <div class="garment-card${isSelected ? ' pairing-candidate' : ''}" onclick="handlePairingTap('${g.id}')">
+        <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
+        <div class="garment-category-badge">${catLabel}</div>
+        <div class="garment-label">${escHtml(g.name)}</div>
+      </div>`;
+  }).join('');
 }
 
 function escHtml(s) {
@@ -1088,27 +1170,25 @@ function deleteFromModal() {
   closeMetaModal(); showToast('Item removed');
 }
 
+// ─── Tab switching ────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Btn').classList.add('active');
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  if (tab === 'pairings') renderPairingWardrobe();
+}
+
 // ─── Pairing mode ─────────────────────────────────────────────
 function startPairingMode() {
-  state.pairingMode    = true;
-  state.pairingItemId  = null;
-  state.anchorMode     = false;
-  document.getElementById('pairingsSection').style.display = 'none';
-  document.getElementById('pairingsList').innerHTML = '';
-  renderWardrobe();
-  document.getElementById('pairingBtn').textContent = '✕ Cancel pairings';
-  document.getElementById('pairingBtn').onclick = closePairings;
-  document.getElementById('wardrobeGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  switchTab('pairings');
 }
 
 function closePairings() {
-  state.pairingMode   = false;
   state.pairingItemId = null;
   document.getElementById('pairingsSection').style.display = 'none';
   document.getElementById('pairingsList').innerHTML = '';
-  document.getElementById('pairingBtn').textContent = 'Best pairings for one item';
-  document.getElementById('pairingBtn').onclick = startPairingMode;
-  renderWardrobe();
+  renderPairingWardrobe();
 }
 
 async function getPairings(itemId) {
@@ -1219,17 +1299,40 @@ STRICT RULES:
   }
 }
 
+function categoryIcon(name, wardrobeItems) {
+  // Try to match item name to a wardrobe garment to get its category
+  const g = wardrobeItems.find(w =>
+    w.name.toLowerCase() === name.toLowerCase() ||
+    name.toLowerCase().includes(w.name.toLowerCase()) ||
+    w.name.toLowerCase().includes(name.toLowerCase())
+  );
+  const cat = g?.category || '';
+  if (cat === 'top')        return '👕';
+  if (cat === 'bottom')     return '👖';
+  if (cat === 'shoes')      return '👞';
+  if (cat === 'outerwear')  return '🧥';
+  if (cat === 'belt')       return '🔲';
+  if (cat === 'accessory')  return '⌚';
+  if (cat === 'full-outfit')return '🎽';
+  // Fallback: guess from name keywords
+  const n = name.toLowerCase();
+  if (/shoe|loafer|sneaker|boot|sandal|oxford|slip.on/.test(n)) return '👞';
+  if (/pant|jean|chino|short|trouser|bottom/.test(n))           return '👖';
+  if (/shirt|polo|tee|sweater|top|jacket|blazer|coat/.test(n))  return '👕';
+  if (/belt/.test(n)) return '🔲';
+  if (/watch|hat|bag|tie|sock/.test(n)) return '⌚';
+  return '👔';
+}
+
 function renderPairings(text, anchorName) {
   const list = document.getElementById('pairingsList');
 
-  // Parse --- blocks
   const blocks = text.split('---').map(b => b.trim()).filter(b => b.startsWith('OUTFIT'));
   if (blocks.length === 0) {
     list.innerHTML = `<div class="pairing-loading">No pairings found — try adding more items to your wardrobe.</div>`;
     return;
   }
 
-  // Sort by score descending
   const parsed = blocks.map(block => {
     const title  = (block.match(/Title:\s*(.+)/i)  || [])[1]?.trim() || 'Outfit';
     const scoreM = block.match(/Score:\s*(\d+)/i);
@@ -1245,7 +1348,18 @@ function renderPairings(text, anchorName) {
 
   list.innerHTML = parsed.map((p, i) => {
     const scoreClass = p.score >= 8 ? 'score-high' : p.score >= 5 ? 'score-mid' : 'score-low';
-    const itemTags = p.items.split(',').map(s => `<span class="piece-tag">${escHtml(s.trim())}</span>`).join('');
+    const itemNames  = p.items.split(',').map(s => s.trim()).filter(Boolean);
+    const itemRows   = itemNames.map(name => {
+      const icon = categoryIcon(name, state.garments);
+      const g    = state.garments.find(w => w.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(w.name.toLowerCase()));
+      const meta = g ? [g.color, g.fabric].filter(Boolean).join(' · ') : '';
+      return `<div class="pairing-item-row">
+        <div class="pairing-item-icon">${icon}</div>
+        <div class="pairing-item-name">${escHtml(name)}</div>
+        ${meta ? `<div class="pairing-item-meta">${escHtml(meta)}</div>` : ''}
+      </div>`;
+    }).join('');
+
     return `
       <div class="pairing-card">
         <div class="pairing-card-header">
@@ -1255,8 +1369,8 @@ function renderPairings(text, anchorName) {
           </div>
           <div class="score-badge ${scoreClass}" style="flex-shrink:0;">${p.score}/10</div>
         </div>
-        <div class="pairing-body">${escHtml(p.why)}${p.tip ? '\n\n💡 ' + p.tip : ''}${p.tuck ? '\n👔 Tuck: ' + p.tuck : ''}</div>
-        <div class="piece-tags" style="margin-top:12px;">${itemTags}</div>
+        <div class="pairing-items-list">${itemRows}</div>
+        <div class="pairing-body" style="margin-top:10px;">${escHtml(p.why)}${p.tip ? '\n\n💡 ' + p.tip : ''}${p.tuck ? '\n👔 Tuck: ' + p.tuck : ''}</div>
       </div>`;
   }).join('');
 }
