@@ -193,7 +193,7 @@ section + section { padding-top: 0; }
 .cta-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* Result */
-.result-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.result-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
 .result-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 .result-title { font-family: var(--font-serif); font-size: 20px; line-height: 1.3; color: var(--accent-text); flex: 1; }
 .weather-badge {
@@ -454,14 +454,15 @@ section + section { padding-top: 0; }
 .shop-pairs { display: flex; flex-wrap: wrap; gap: 5px; }
 .shop-pair-tag { font-size: 11px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 20px; padding: 3px 9px; color: var(--text-muted); }
 .pairing-image-strip {
-  display: flex; gap: 8px; margin: 12px 0 4px;
+  display: flex; gap: 8px; margin: 12px 0 8px;
+  height: 120px;
 }
 .pairing-image-thumb {
-  flex: 1; min-width: 0; aspect-ratio: 3/4;
+  flex: 1; min-width: 0; height: 100%;
   border-radius: var(--radius-sm); overflow: hidden;
   border: 0.5px solid var(--border); position: relative;
 }
-.pairing-image-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pairing-image-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
 .pairing-image-thumb-label {
   position: absolute; bottom: 0; left: 0; right: 0;
   background: linear-gradient(transparent, rgba(0,0,0,0.75));
@@ -657,7 +658,8 @@ section + section { padding-top: 0; }
 
   <!-- Tab bar -->
   <div class="tab-bar">
-    <button class="tab-btn active" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Pairings</button>
+    <button class="tab-btn active" id="tabWardrobeBtn" onclick="switchTab('wardrobe')">👗 Wardrobe</button>
+    <button class="tab-btn" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Pairings</button>
     <button class="tab-btn" id="tabOutfitBtn" onclick="switchTab('outfit')">👕 Outfits</button>
     <button class="tab-btn" id="tabShopBtn" onclick="switchTab('shop')">🛒 Shopping</button>
   </div>
@@ -745,46 +747,26 @@ section + section { padding-top: 0; }
           <span id="countBadge" style="display:none" class="count-badge">0</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <button class="anchor-toggle" id="anchorToggle" onclick="toggleAnchorMode()" style="display:none;">
-            <span class="anchor-toggle-dot"></span>Pin items
-          </button>
           <div class="storage-status">
             <div class="storage-dot saved" id="storageDot"></div>
             <span class="storage-label" id="storageLabel">0 items</span>
           </div>
-          <button class="clear-btn" id="clearBtn" onclick="confirmClear()" style="display:none;">Clear all</button>
         </div>
       </div>
-      <div class="anchor-hint" id="anchorHint" style="display:none;">Tap a top, bottom, or shoes to pin it — the AI will build around your selection.</div>
+      <div class="anchor-hint" id="anchorHint" style="display:block;text-align:left;padding:0 0 10px;">Tap a top, bottom, or shoes to pin it — the AI builds your outfit around pinned items.</div>
 
       <div id="analyzingBanner" style="display:none;" class="analyzing-banner">
         <div class="analyzing-spinner"></div>
         <span id="analyzingText">Analyzing items…</span>
       </div>
 
-      <div id="uploadZoneWrap">
-        <div class="upload-zone">
-          <input type="file" id="fileInput" accept="image/*" multiple onchange="handleUpload(event)">
-          <div class="upload-icon">👔</div>
-          <div class="upload-text">
-            <strong>Add clothes</strong>
-            Tap to choose photos — shirts, pants, shoes, accessories
-          </div>
-        </div>
-      </div>
-
-      <div id="addMoreWrap" style="display:none;">
-        <div class="upload-zone upload-zone-sm">
-          <input type="file" id="fileInputMore" accept="image/*" multiple onchange="handleUpload(event)">
-          <div class="upload-text">
-            <strong>+ Add more items</strong>
-            Choose more photos from your library
-          </div>
-        </div>
+      <div id="outfitEmptyWardrobe" style="display:none;text-align:center;padding:24px 0;color:var(--text-dim);font-size:13px;">
+        <div style="font-size:32px;margin-bottom:8px;">👗</div>
+        Add clothes in the <strong style="color:var(--text);">Wardrobe</strong> tab first.
       </div>
 
       <div class="wardrobe-grid" id="wardrobeGrid"></div>
-      <p style="font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;" id="tapHint">Tap any item to edit its details</p>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;" id="tapHint"></p>
     </section>
 
     <!-- Outfit result -->
@@ -809,6 +791,8 @@ section + section { padding-top: 0; }
           </div>
         </div>
       </div>
+      <!-- Additional outfit cards (2nd and 3rd picks) -->
+      <div id="outfitExtraCards"></div>
       <!-- Outfit shopping recommendations -->
       <div id="outfitShopSection" style="display:none; margin-top:0;">
         <div id="outfitShopList"></div>
@@ -825,7 +809,7 @@ section + section { padding-top: 0; }
   </div><!-- end tabOutfit -->
 
   <!-- ── TAB: Best Pairings ── -->
-  <div class="tab-panel active" id="tabPairings">
+  <div class="tab-panel" id="tabPairings">
 
     <!-- Pairings wardrobe -->
     <section>
@@ -887,10 +871,13 @@ section + section { padding-top: 0; }
       </div>
       <div id="shopListGrid"></div>
     </section>
+  </div><!-- end tabShop -->
+
+  <!-- ── TAB: My Wardrobe ── -->
+  <div class="tab-panel active" id="tabWardrobe">
 
     <!-- Style Profile -->
     <section>
-      <div class="divider"></div>
       <div class="section-label">My style profile</div>
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.6;">Describe your personal style, fit preferences, aesthetic, and any rules the AI should always follow. Injected into every recommendation.</p>
       <textarea class="style-profile-input" id="styleProfileInput"
@@ -902,7 +889,53 @@ section + section { padding-top: 0; }
       </div>
       <p style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5;">Saving clears the recommendation cache so your next suggestion uses the updated profile.</p>
     </section>
-  </div><!-- end tabShop -->
+
+    <section>
+      <div class="divider" style="margin:0 0 16px;"></div>
+      <div class="section-label">
+        <div class="section-label-left">
+          My wardrobe
+          <span id="wardrobeTabBadge" style="display:none" class="count-badge">0</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="storage-status">
+            <div class="storage-dot saved" id="wardrobeStorageDot"></div>
+            <span class="storage-label" id="wardrobeStorageLabel">0 items</span>
+          </div>
+          <button class="clear-btn" id="wardrobeClearBtn" onclick="confirmClear()" style="display:none;">Clear all</button>
+        </div>
+      </div>
+
+      <div id="analyzingBannerWardrobe" style="display:none;" class="analyzing-banner">
+        <div class="analyzing-spinner"></div>
+        <span id="analyzingTextWardrobe">Analyzing items…</span>
+      </div>
+
+      <div id="wardrobeUploadZone">
+        <div class="upload-zone">
+          <input type="file" id="fileInputWardrobe" accept="image/*" multiple onchange="handleUpload(event)">
+          <div class="upload-icon">👔</div>
+          <div class="upload-text">
+            <strong>Add clothes</strong>
+            Tap to choose photos — shirts, pants, shoes, accessories
+          </div>
+        </div>
+      </div>
+
+      <div id="wardrobeAddMoreWrap" style="display:none;">
+        <div class="upload-zone upload-zone-sm">
+          <input type="file" id="fileInputWardrobeMore" accept="image/*" multiple onchange="handleUpload(event)">
+          <div class="upload-text">
+            <strong>+ Add more items</strong>
+            Choose more photos from your library
+          </div>
+        </div>
+      </div>
+
+      <div class="wardrobe-grid" id="wardrobeTabGrid" style="margin-top:12px;"></div>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:10px;text-align:center;" id="wardrobeTabHint"></p>
+    </section>
+  </div><!-- end tabWardrobe -->
 
 </div>
 
@@ -1007,7 +1040,7 @@ const state = {
 };
 
 // ─── Init ─────────────────────────────────────────────────────
-function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); renderPairingWardrobe(); updateShopListBadge(); cachePrune(); initStyleProfileUI(); }
+function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); renderWardrobeTab(); updateShopListBadge(); cachePrune(); initStyleProfileUI(); }
 
 // ─── API Key ──────────────────────────────────────────────────
 function loadApiKey() {
@@ -1217,16 +1250,17 @@ async function autoTag(garment) {
 }
 
 function updateAnalyzingBanner() {
-  const banner = document.getElementById('analyzingBanner');
-  const text   = document.getElementById('analyzingText');
-  if (state.analyzingQueue > 0) {
-    banner.style.display = 'flex';
-    text.textContent = state.analyzingQueue === 1
-      ? 'Analyzing 1 item…'
-      : `Analyzing ${state.analyzingQueue} items…`;
-  } else {
-    banner.style.display = 'none';
-  }
+  const banner  = document.getElementById('analyzingBanner');
+  const text    = document.getElementById('analyzingText');
+  const banner2 = document.getElementById('analyzingBannerWardrobe');
+  const text2   = document.getElementById('analyzingTextWardrobe');
+  const msg = state.analyzingQueue > 0
+    ? (state.analyzingQueue === 1 ? 'Analyzing 1 item…' : `Analyzing ${state.analyzingQueue} items…`)
+    : null;
+  if (banner)  banner.style.display  = msg ? 'flex' : 'none';
+  if (text)    text.textContent      = msg || '';
+  if (banner2) banner2.style.display = msg ? 'flex' : 'none';
+  if (text2)   text2.textContent     = msg || '';
 }
 
 // ─── Upload ───────────────────────────────────────────────────
@@ -1253,31 +1287,19 @@ function handleUpload(e) {
   e.target.value = '';
 }
 
-function toggleAnchorMode() {
-  state.anchorMode = !state.anchorMode;
-  if (!state.anchorMode) {
-    // clear anchors when exiting mode
-    state.anchors = { top: null, bottom: null, shoes: null };
-  }
-  renderWardrobe();
-}
-
 function handleCardTap(id) {
-  if (!state.anchorMode) { openMetaModal(id); return; }
   const g = state.garments.find(x => x.id === id);
   if (!g) return;
 
-  // Determine which slot this item belongs to
   const slot = g.category === 'top'    ? 'top'    :
                g.category === 'bottom' ? 'bottom' :
                g.category === 'shoes'  ? 'shoes'  : null;
 
   if (!slot) {
-    showToast('Only tops, bottoms, and shoes can be pinned');
+    showToast('Only tops, bottoms & shoes can be pinned');
     return;
   }
 
-  // Toggle: if already anchored in its slot, unpin it
   if (state.anchors[slot] === id) {
     state.anchors[slot] = null;
     showToast(`${CATEGORIES[slot]} unpinned`);
@@ -1341,24 +1363,13 @@ function sortedGarments() {
 }
 
 function renderWardrobe() {
-  const grid       = document.getElementById('wardrobeGrid');
-  const badge      = document.getElementById('countBadge');
-  const uploadWrap = document.getElementById('uploadZoneWrap');
-  const addMore    = document.getElementById('addMoreWrap');
-  const clearBtn   = document.getElementById('clearBtn');
-  const tapHint    = document.getElementById('tapHint');
-  const anchorToggle = document.getElementById('anchorToggle');
-  const anchorHint   = document.getElementById('anchorHint');
-  const n          = state.garments.length;
+  const grid    = document.getElementById('wardrobeGrid');
+  const badge   = document.getElementById('countBadge');
+  const empty   = document.getElementById('outfitEmptyWardrobe');
+  const n       = state.garments.length;
 
   badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none';
-  uploadWrap.style.display = n === 0 ? 'block' : 'none';
-  addMore.style.display    = n > 0 ? 'block' : 'none';
-  clearBtn.style.display   = n > 0 ? 'inline' : 'none';
-  tapHint.style.display    = n > 0 && !state.anchorMode ? 'block' : 'none';
-  anchorToggle.style.display = n > 0 ? 'flex' : 'none';
-  anchorHint.style.display   = state.anchorMode ? 'block' : 'none';
-  anchorToggle.classList.toggle('active', state.anchorMode);
+  if (empty) empty.style.display = n === 0 ? 'block' : 'none';
 
   grid.innerHTML = sortedGarments().map(g => {
     const catLabel = g.category ? CATEGORIES[g.category] || g.category : '…';
@@ -1375,12 +1386,13 @@ function renderWardrobe() {
           ? `<div class="anchor-badge">📌 ${anchorLabel}</div>`
           : `<div class="garment-category-badge">${catLabel}</div>`}
         <div class="garment-label">${escHtml(g.name)}</div>
-        ${!state.anchorMode ? '<div class="edit-icon">✏️</div>' : ''}
-        <button class="remove-btn" onclick="event.stopPropagation();removeGarment('${g.id}')" aria-label="Remove">×</button>
       </div>`;
   }).join('');
 
   if (n === 0) setStorageStatus('saved', '0 items');
+
+  // Also refresh wardrobe tab if rendered
+  if (document.getElementById('wardrobeTabGrid')) renderWardrobeTab();
 }
 
 function renderPairingWardrobe() {
@@ -1401,6 +1413,37 @@ function renderPairingWardrobe() {
         <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
         <div class="garment-category-badge">${catLabel}</div>
         <div class="garment-label">${escHtml(g.name)}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderWardrobeTab() {
+  const grid      = document.getElementById('wardrobeTabGrid');
+  const badge     = document.getElementById('wardrobeTabBadge');
+  const uploadWrap= document.getElementById('wardrobeUploadZone');
+  const addMore   = document.getElementById('wardrobeAddMoreWrap');
+  const clearBtn  = document.getElementById('wardrobeClearBtn');
+  const hint      = document.getElementById('wardrobeTabHint');
+  const storageDot= document.getElementById('wardrobeStorageDot');
+  const storageLabel = document.getElementById('wardrobeStorageLabel');
+  const n = state.garments.length;
+
+  badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none';
+  uploadWrap.style.display = n === 0 ? 'block' : 'none';
+  addMore.style.display    = n > 0  ? 'block' : 'none';
+  clearBtn.style.display   = n > 0  ? 'inline': 'none';
+  hint.textContent = n > 0 ? 'Tap any item to edit its details' : '';
+  storageLabel.textContent = `${n} item${n !== 1 ? 's' : ''}`;
+
+  grid.innerHTML = sortedGarments().map(g => {
+    const catLabel = g.category ? CATEGORIES[g.category] || g.category : '…';
+    return `
+      <div class="garment-card" onclick="openMetaModal('${g.id}')">
+        <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
+        <div class="garment-category-badge">${catLabel}</div>
+        <div class="garment-label">${escHtml(g.name)}</div>
+        <div class="edit-icon">✏️</div>
+        <button class="remove-btn" onclick="event.stopPropagation();removeGarment('${g.id}')" aria-label="Remove">×</button>
       </div>`;
   }).join('');
 }
@@ -1462,6 +1505,7 @@ function switchTab(tab) {
   document.getElementById('tab' + capTab).classList.add('active');
   if (tab === 'pairings') renderPairingWardrobe();
   if (tab === 'shop') { renderShoppingList(); initStyleProfileUI(); }
+  if (tab === 'wardrobe') renderWardrobeTab();
 }
 
 // ─── Pairing mode ─────────────────────────────────────────────
@@ -1962,6 +2006,63 @@ function initPairingsChat(pairingsText, anchorName) {
   document.getElementById('pairingsChatCard').style.display = 'block';
 }
 
+// ─── Outfit card body builder ────────────────────────────────
+function buildOutfitCardBody(outfit) {
+  const itemNames = outfit.items || [];
+
+  const imageThumbs = itemNames.map(name => {
+    const g = state.garments.find(w =>
+      w.name.toLowerCase() === name.toLowerCase() ||
+      w.name.toLowerCase().includes(name.toLowerCase()) ||
+      name.toLowerCase().includes(w.name.toLowerCase())
+    );
+    if (!g) return '';
+    return `<div class="pairing-image-thumb">
+      <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
+      <div class="pairing-image-thumb-label">${escHtml(g.name)}</div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  const itemRows = itemNames.map(name => {
+    const icon = categoryIcon(name, state.garments);
+    const g = state.garments.find(w =>
+      w.name.toLowerCase() === name.toLowerCase() ||
+      w.name.toLowerCase().includes(name.toLowerCase()) ||
+      name.toLowerCase().includes(w.name.toLowerCase())
+    );
+    const meta = g ? [g.color, g.fabric].filter(Boolean).join(' · ') : '';
+    return `<div class="pairing-item-row">
+      <div class="pairing-item-icon">${icon}</div>
+      <div class="pairing-item-name">${escHtml(name)}</div>
+      ${meta ? `<div class="pairing-item-meta">${escHtml(meta)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  const bodyParts = [];
+  if (outfit.why)         bodyParts.push(outfit.why);
+  if (outfit.tip)         bodyParts.push(`💡 ${outfit.tip}`);
+  if (outfit.tuck)        bodyParts.push(`👔 Tuck: ${outfit.tuck}`);
+  if (outfit.scoreReason) bodyParts.push(`★ ${outfit.scoreReason}`);
+
+  const to10HTML = (outfit.to10 && outfit.to10.length > 0) ? `
+    <div class="to10-block">
+      <div class="to10-label">⬆️ To make this a 10</div>
+      <div class="to10-list">
+        ${outfit.to10.map(note => `
+          <div class="to10-item">
+            <div class="to10-bullet">↑</div>
+            <span>${escHtml(note)}</span>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  return `
+    ${imageThumbs ? `<div class="pairing-image-strip">${imageThumbs}</div>` : ''}
+    <div class="pairing-items-list" style="margin-bottom:12px;">${itemRows}</div>
+    <div style="font-size:14px;color:var(--text-muted);line-height:1.75;white-space:pre-wrap;">${escHtml(bodyParts.join('\n\n'))}</div>
+    ${to10HTML}`;
+}
+
 // ─── AI outfit suggestion ─────────────────────────────────────
 async function getSuggestion() {
   if (state.loading || !state.apiKey) return;
@@ -1980,6 +2081,7 @@ async function getSuggestion() {
   rs.style.display = 'block';
   rTitle.textContent = 'Thinking…'; rBody.textContent = '';
   rWx.style.display = 'none'; rScore.style.display = 'none'; rPieces.innerHTML = '';
+  document.getElementById('outfitExtraCards').innerHTML = '';
 
   const wxCtx = state.weather
     ? `Current weather: ${state.weather.temp}°F (feels like ${state.weather.feels}°F), ${state.weather.cond}, wind ${state.weather.wind} mph, humidity ${state.weather.humidity}%.`
@@ -2065,28 +2167,29 @@ STRICT RULES:
 - ONLY recommend items that appear in the numbered list above by their exact name.
 - Never invent or imply specific items not in the list.
 - Use the metadata (category, color, fabric, style) to make thoughtful pairings.
-- Respond ONLY with a valid JSON object — no markdown, no explanation, no extra text.
+- Respond ONLY with a valid JSON array — no markdown, no explanation, no extra text.
 
-Return this exact JSON shape:
-{
-  "title": "short punchy outfit title",
-  "items": ["exact item name 1", "exact item name 2", "exact item name 3"],
-  "why": "2-3 sentences on why these pieces work together for the occasion and weather",
-  "tip": "one practical styling tip",
-  "tuck": "tucked in or untucked, with one sentence why",
-  "score": 8,
-  "scoreReason": "one sentence explaining the score",
-  "to10": ["short actionable note 1 that would push this to a 10", "short actionable note 2", "short actionable note 3"],
-  "shopping": [
-    {
-      "item": "specific item to buy, e.g. Slim-fit navy chinos",
-      "why": "1-2 sentences why this purchase elevates the outfit and what score it would unlock",
-      "pairs": "comma-separated existing wardrobe items it pairs with"
-    }
-  ]
-}
-For "to10": provide 2-4 concise, specific, actionable notes covering styling, grooming, accessories, or clothing adjustments that would elevate this outfit to a perfect 10. These can reference items to buy OR free styling changes (e.g. rolling sleeves, adding a pocket square, shoe polish, etc.). If the outfit is already a 9+, still suggest 1-2 refinements.
-Include 1-3 shopping suggestions for items NOT in the wardrobe that would push the outfit closer to a 10/10. If the outfit is already a 9 or 10, include 1 aspirational upgrade.`;
+Return an array of exactly 3 distinct outfit recommendations, ranked best to worst by score:
+[
+  {
+    "title": "short punchy outfit title",
+    "items": ["exact item name 1", "exact item name 2", "exact item name 3"],
+    "why": "2-3 sentences on why these pieces work together for the occasion and weather",
+    "tip": "one practical styling tip",
+    "tuck": "tucked in or untucked, with one sentence why",
+    "score": 8,
+    "scoreReason": "one sentence explaining the score",
+    "to10": ["short actionable note 1", "short actionable note 2"],
+    "shopping": [
+      {
+        "item": "specific item to buy",
+        "why": "1-2 sentences why this purchase elevates the outfit",
+        "pairs": "comma-separated existing wardrobe items it pairs with"
+      }
+    ]
+  }
+]
+Each outfit must use a genuinely different combination of items. For "to10": 2-4 concise actionable notes covering styling, grooming, or accessories. Include 1-3 shopping suggestions per outfit for items NOT in the wardrobe. If fewer than 3 distinct outfits are possible from the wardrobe, generate as many as possible (minimum 1).`;
 
   try {
     const cacheKey    = buildOutfitCacheKey();
@@ -2107,7 +2210,7 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5',
-          max_tokens: 700,
+          max_tokens: 2200,
           messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: promptText }] }]
         })
       });
@@ -2127,89 +2230,64 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
       cacheSet(cacheKey, outfit);
     }
 
-    // Title
-    rTitle.textContent = outfit.title || 'Your outfit';
+    // Normalize: support both array and legacy single object
+    const outfits = Array.isArray(outfit) ? outfit : [outfit];
 
-    // Weather badge
+    // Weather badge (shared across all cards)
     if (state.weather) {
       rWx.textContent = `${state.weather.temp}°F · ${state.weather.cond}`;
       rWx.style.display = 'block';
     }
 
-    // Score badge
-    if (outfit.score) {
-      const n = parseInt(outfit.score, 10);
+    // Render first outfit into existing result card header
+    const first = outfits[0];
+    rTitle.textContent = first.title || 'Your outfit';
+    if (first.score) {
+      const n = parseInt(first.score, 10);
       rScore.textContent = `${n}/10`;
       rScore.className = 'score-badge ' + (n >= 8 ? 'score-high' : n >= 5 ? 'score-mid' : 'score-low');
       rScore.style.display = 'block';
     }
+    rBody.innerHTML = buildOutfitCardBody(first);
+    rPieces.innerHTML = '';
 
-    // Image strip
-    const itemNames = outfit.items || [];
-    const imageThumbs = itemNames.map(name => {
-      const g = state.garments.find(w =>
-        w.name.toLowerCase() === name.toLowerCase() ||
-        w.name.toLowerCase().includes(name.toLowerCase()) ||
-        name.toLowerCase().includes(w.name.toLowerCase())
-      );
-      if (!g) return '';
-      return `<div class="pairing-image-thumb">
-        <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
-        <div class="pairing-image-thumb-label">${escHtml(g.name)}</div>
-      </div>`;
-    }).filter(Boolean).join('');
-
-    // Icon rows
-    const itemRows = itemNames.map(name => {
-      const icon = categoryIcon(name, state.garments);
-      const g    = state.garments.find(w =>
-        w.name.toLowerCase() === name.toLowerCase() ||
-        w.name.toLowerCase().includes(name.toLowerCase()) ||
-        name.toLowerCase().includes(w.name.toLowerCase())
-      );
-      const meta = g ? [g.color, g.fabric].filter(Boolean).join(' · ') : '';
-      return `<div class="pairing-item-row">
-        <div class="pairing-item-icon">${icon}</div>
-        <div class="pairing-item-name">${escHtml(name)}</div>
-        ${meta ? `<div class="pairing-item-meta">${escHtml(meta)}</div>` : ''}
-      </div>`;
+    // Render outfits 2 and 3 as additional cards after the first
+    const extraContainer = document.getElementById('outfitExtraCards');
+    extraContainer.innerHTML = outfits.slice(1).map((o, idx) => {
+      const rankLabel = idx === 0 ? '2nd' : '3rd';
+      const n = parseInt(o.score, 10);
+      const scoreClass = n >= 8 ? 'score-high' : n >= 5 ? 'score-mid' : 'score-low';
+      return `
+        <div class="result-card" style="margin-top:12px;">
+          <div class="result-header">
+            <div style="flex:1;">
+              <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim);font-weight:500;margin-bottom:4px;">${rankLabel} pick</div>
+              <div class="result-title">${escHtml(o.title || 'Outfit')}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
+              <div class="score-badge ${scoreClass}">${n}/10</div>
+            </div>
+          </div>
+          ${buildOutfitCardBody(o, idx + 1)}
+        </div>`;
     }).join('');
 
-    // Body text
-    const bodyParts = [];
-    if (outfit.why)        bodyParts.push(outfit.why);
-    if (outfit.tip)        bodyParts.push(`💡 ${outfit.tip}`);
-    if (outfit.tuck)       bodyParts.push(`👔 Tuck: ${outfit.tuck}`);
-    if (outfit.scoreReason) bodyParts.push(`★ ${outfit.scoreReason}`);
-
-    const to10HTML = (outfit.to10 && outfit.to10.length > 0) ? `
-      <div class="to10-block">
-        <div class="to10-label">⬆️ To make this a 10</div>
-        <div class="to10-list">
-          ${outfit.to10.map(note => `
-            <div class="to10-item">
-              <div class="to10-bullet">↑</div>
-              <span>${escHtml(note)}</span>
-            </div>`).join('')}
-        </div>
-      </div>` : '';
-
-    rBody.innerHTML = `
-      ${imageThumbs ? `<div class="pairing-image-strip" style="margin-bottom:12px;">${imageThumbs}</div>` : ''}
-      <div class="pairing-items-list" style="margin-bottom:12px;">${itemRows}</div>
-      <div style="font-size:14px;color:var(--text-muted);line-height:1.75;white-space:pre-wrap;">${escHtml(bodyParts.join('\n\n'))}</div>
-      ${to10HTML}`;
-
-    rPieces.innerHTML = '';
+    // Collect all shopping items across all outfits (deduplicated by name)
+    const allShopItems = [];
+    const seenShop = new Set();
+    outfits.forEach(o => {
+      (o.shopping || []).forEach(s => {
+        if (!seenShop.has(s.item)) { seenShop.add(s.item); allShopItems.push(s); }
+      });
+    });
 
     // Shopping recommendations
     const outfitShopSection = document.getElementById('outfitShopSection');
     const outfitShopList    = document.getElementById('outfitShopList');
-    if (outfit.shopping && outfit.shopping.length > 0) {
-      const shopItems = outfit.shopping;
-      const shopHTML  = `
+    if (allShopItems.length > 0) {
+      const shopHTML = `
         <div class="shop-section-label">Consider buying</div>
-        ${shopItems.map((s, si) => {
+        ${allShopItems.map((s, si) => {
           const itemId     = `ofit_${Date.now()}_${si}`;
           const alreadyAdded = loadShopList().find(i => i.name === s.item);
           const searchUrl  = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' clothing')}`;
@@ -2239,7 +2317,7 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
         }).join('')}`;
       outfitShopList.innerHTML = shopHTML;
       outfitShopSection.style.display = 'block';
-      shopItems.forEach((s, si) => fetchShopOG(s.item, `ofit-link-${si}`, `ofit-placeholder-${si}`, `ofit-footer-${si}`, `ofit-link-title-${si}`));
+      allShopItems.forEach((s, si) => fetchShopOG(s.item, `ofit-link-${si}`, `ofit-placeholder-${si}`, `ofit-footer-${si}`, `ofit-link-title-${si}`));
     } else {
       outfitShopSection.style.display = 'none';
     }
@@ -2247,8 +2325,10 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
     // Show cache clear button
     document.getElementById('outfitCacheSection').style.display = 'block';
 
-    // Seed follow-up chat
-    initOutfitChat(`${outfit.title}\n\n${outfit.why}\nItems: ${itemNames.join(', ')}\nTuck: ${outfit.tuck}\nScore: ${outfit.score}/10\nTo make it a 10: ${(outfit.to10 || []).join('; ')}`);
+    // Seed follow-up chat with all 3 outfits as context
+    initOutfitChat(outfits.map((o, i) =>
+      `Outfit ${i+1}: ${o.title}\nItems: ${(o.items||[]).join(', ')}\nScore: ${o.score}/10\nTuck: ${o.tuck}\nTo make it a 10: ${(o.to10||[]).join('; ')}`
+    ).join('\n\n'));
 
   } catch(err) {
     rTitle.textContent = 'Something went wrong';
