@@ -359,6 +359,39 @@ section + section { padding-top: 0; }
 .pairing-item-name { font-size: 13px; color: var(--text); flex: 1; }
 .pairing-item-meta { font-size: 11px; color: var(--text-dim); }
 
+/* To-10 notes */
+.to10-block {
+  background: rgba(107,191,142,0.07); border: 0.5px solid rgba(107,191,142,0.2);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 12px;
+}
+.to10-label {
+  font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--success); font-weight: 500; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.to10-list { display: flex; flex-direction: column; gap: 6px; }
+.to10-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13px; color: var(--text-muted); line-height: 1.5;
+}
+.to10-bullet {
+  width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  background: rgba(107,191,142,0.15); border: 0.5px solid rgba(107,191,142,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--success); font-weight: 600;
+}
+
+/* Style profile */
+.style-profile-input {
+  width: 100%; background: var(--surface2); border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  color: var(--text); font-family: var(--font-sans); font-size: 13px;
+  line-height: 1.6; outline: none; resize: none;
+  transition: border-color 0.2s; display: block;
+}
+.style-profile-input:focus { border-color: var(--accent); }
+.style-profile-input::placeholder { color: var(--text-dim); }
+
 /* Shopping list tab */
 .shop-list-card {
   background: var(--surface); border: 0.5px solid var(--border);
@@ -384,7 +417,7 @@ section + section { padding-top: 0; }
 }
 .shop-list-remove-btn:active { color: var(--danger); }
 .shop-list-img {
-  width: 100%; aspect-ratio: 1/1; object-fit: cover;
+  width: 100%; aspect-ratio: 16/9; object-fit: cover;
   border-radius: var(--radius-sm); margin-bottom: 10px;
   border: 0.5px solid var(--border); background: var(--surface2); display: block;
 }
@@ -481,20 +514,36 @@ section + section { padding-top: 0; }
 .chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .chat-send-btn:active { opacity: 0.8; }
 
-/* Shop product image */
+/* Shop product link area */
+.shop-product-link-area {
+  display: block; text-decoration: none; margin-bottom: 10px;
+  border-radius: var(--radius-sm); overflow: hidden;
+  border: 0.5px solid var(--border); background: var(--surface2);
+  transition: border-color 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.shop-product-link-area:active { border-color: var(--accent); }
 .shop-product-img {
-  width: 100%; aspect-ratio: 1/1; object-fit: cover;
-  border-radius: var(--radius-sm); margin-bottom: 10px;
-  border: 0.5px solid var(--border); background: var(--surface2);
-  display: block;
+  width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block;
+  background: var(--surface2);
 }
-.shop-product-img-placeholder {
-  width: 100%; aspect-ratio: 1/1;
-  border-radius: var(--radius-sm); margin-bottom: 10px;
-  border: 0.5px solid var(--border); background: var(--surface2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 32px; color: var(--text-dim);
+.shop-product-link-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; gap: 8px;
 }
+.shop-product-link-title {
+  font-size: 12px; color: var(--text-muted); flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.shop-product-link-cta {
+  font-size: 11px; color: var(--accent); font-weight: 500;
+  white-space: nowrap; flex-shrink: 0;
+}
+.shop-product-placeholder {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; gap: 8px;
+}
+.shop-product-placeholder-text { font-size: 12px; color: var(--text-muted); flex: 1; }
+.shop-product-placeholder-loading { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-dim); }
 .pairing-card {
   background: var(--surface); border: 0.5px solid var(--border);
   border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
@@ -754,7 +803,7 @@ section + section { padding-top: 0; }
           <div class="followup-label">Ask a follow-up</div>
           <div class="chat-history" id="outfitChatHistory"></div>
           <div class="chat-input-row">
-            <textarea class="chat-input" id="outfitChatInput" placeholder="e.g. Would this work for a wedding?" rows="1"
+            <textarea class="chat-input" id="outfitChatInput" placeholder="Ask a question…" rows="1"
               onkeydown="handleChatKey(event,'outfit')" oninput="autoResize(this)"></textarea>
             <button class="chat-send-btn" id="outfitChatSend" onclick="sendFollowUp('outfit')" title="Send">➤</button>
           </div>
@@ -811,7 +860,7 @@ section + section { padding-top: 0; }
           <div class="followup-label">Ask a follow-up</div>
           <div class="chat-history" id="pairingsChatHistory"></div>
           <div class="chat-input-row">
-            <textarea class="chat-input" id="pairingsChatInput" placeholder="e.g. Which pairing works best for summer?" rows="1"
+            <textarea class="chat-input" id="pairingsChatInput" placeholder="Ask a question…" rows="1"
               onkeydown="handleChatKey(event,'pairings')" oninput="autoResize(this)"></textarea>
             <button class="chat-send-btn" id="pairingsChatSend" onclick="sendFollowUp('pairings')" title="Send">➤</button>
           </div>
@@ -837,6 +886,21 @@ section + section { padding-top: 0; }
         <div style="margin-top:4px;font-size:12px;">Tap "Save to list" on any shopping recommendation in Best Pairings.</div>
       </div>
       <div id="shopListGrid"></div>
+    </section>
+
+    <!-- Style Profile -->
+    <section>
+      <div class="divider"></div>
+      <div class="section-label">My style profile</div>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.6;">Describe your personal style, fit preferences, aesthetic, and any rules the AI should always follow. Injected into every recommendation.</p>
+      <textarea class="style-profile-input" id="styleProfileInput"
+        placeholder="e.g. I prefer slim or tailored fits. I lean toward a smart-casual European aesthetic. I avoid bright colors — mostly neutrals, navy, olive, and white. I work in a business-casual office. I prefer loafers and leather shoes over sneakers for most occasions."
+        oninput="onStyleProfileChange()" rows="6"></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+        <span id="profileSaveStatus" style="font-size:11px;color:var(--text-dim);">Not saved</span>
+        <button class="api-save-btn" onclick="saveStyleProfile()" style="padding:8px 14px;font-size:12px;">Save</button>
+      </div>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5;">Saving clears the recommendation cache so your next suggestion uses the updated profile.</p>
     </section>
   </div><!-- end tabShop -->
 
@@ -913,6 +977,7 @@ const LS_KEY_APIKEY      = 'closetiq_apikey';
 const LS_KEY_INSTALL     = 'closetiq_install_dismissed';
 const LS_KEY_SHOPLIST    = 'closetiq_shoplist_v1';
 const LS_KEY_REC_CACHE   = 'closetiq_rec_cache_v1';
+const LS_KEY_STYLE_PROFILE = 'closetiq_style_profile_v1';
 const CACHE_TTL_MS       = 30 * 24 * 60 * 60 * 1000; // 30 days
 const MAX_IMAGES_TO_AI = 8;
 const COMPRESS_DIM     = 480;
@@ -942,7 +1007,7 @@ const state = {
 };
 
 // ─── Init ─────────────────────────────────────────────────────
-function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); renderPairingWardrobe(); updateShopListBadge(); cachePrune(); }
+function init() { loadApiKey(); loadWardrobe(); showInstallPrompt(); fetchWeather(); renderPairingWardrobe(); updateShopListBadge(); cachePrune(); initStyleProfileUI(); }
 
 // ─── API Key ──────────────────────────────────────────────────
 function loadApiKey() {
@@ -1396,7 +1461,7 @@ function switchTab(tab) {
   document.getElementById('tab' + capTab + 'Btn').classList.add('active');
   document.getElementById('tab' + capTab).classList.add('active');
   if (tab === 'pairings') renderPairingWardrobe();
-  if (tab === 'shop') renderShoppingList();
+  if (tab === 'shop') { renderShoppingList(); initStyleProfileUI(); }
 }
 
 // ─── Pairing mode ─────────────────────────────────────────────
@@ -1458,13 +1523,18 @@ async function getPairings(itemId) {
     return { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } };
   });
 
+  const styleProfile = loadStyleProfile();
+  const profileBlock = styleProfile
+    ? `\nPERSONAL STYLE PROFILE — always follow these rules:\n${styleProfile}\n`
+    : '';
+
   const prompt = `You are a personal stylist. The user has selected one item and wants to find the best complete outfits built around it.
 
 ANCHOR ITEM (must appear in every outfit): ${anchorDesc}
 
 ${wxCtx}
 ${occasionCtx}
-
+${profileBlock}
 Full wardrobe (ONLY use items from this list):
 ${itemList}
 
@@ -1641,11 +1711,21 @@ function renderPairings(text, anchorName) {
     ${shopItems.map((s, si) => {
       const itemId = `shop_${Date.now()}_${si}`;
       const alreadyAdded = loadShopList().find(i => i.name === s.item);
+      const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' clothing')}`;
       const pairTags = s.pairs.split(',').map(t => t.trim()).filter(Boolean)
         .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
       return `
-        <div class="shop-card" id="shop-card-${si}" data-item-id="${itemId}" data-item-name="${escHtml(s.item)}" data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs)}" data-anchor="${escHtml(anchorName)}">
-          <div class="shop-product-img-placeholder" id="shop-img-${si}">🛍️</div>
+        <div class="shop-card" id="shop-card-${si}" data-item-id="${itemId}" data-item-name="${escHtml(s.item)}" data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs)}" data-anchor="${escHtml(anchorName)}" data-search-url="${escHtml(searchUrl)}">
+          <a class="shop-product-link-area" id="shop-link-${si}" href="${escHtml(searchUrl)}" target="_blank" rel="noopener">
+            <div class="shop-product-placeholder" id="shop-placeholder-${si}">
+              <div class="shop-product-placeholder-text">🛍️ ${escHtml(s.item)}</div>
+              <div class="shop-product-placeholder-loading"><span class="analyzing-spinner"></span>Loading…</div>
+            </div>
+            <div class="shop-product-link-footer" style="display:none;" id="shop-footer-${si}">
+              <span class="shop-product-link-title" id="shop-link-title-${si}"></span>
+              <span class="shop-product-link-cta">Shop →</span>
+            </div>
+          </a>
           <div class="shop-card-header">
             <div class="shop-card-title">🛍️ ${escHtml(s.item)}</div>
             <div class="shop-badge">Near 10/10</div>
@@ -1662,23 +1742,25 @@ function renderPairings(text, anchorName) {
   // Seed follow-up chat with pairings context
   initPairingsChat(text, anchorName);
 
-  // Fetch product images asynchronously after render
-  shopItems.forEach((s, si) => fetchProductImage(s.item, si));
+  // Fetch OG metadata for shop cards asynchronously
+  shopItems.forEach((s, si) => fetchShopOG(s.item, `shop-link-${si}`, `shop-placeholder-${si}`, `shop-footer-${si}`, `shop-link-title-${si}`));
 }
 
 function handleAddToList(si) {
   const card    = document.getElementById(`shop-card-${si}`);
   const btn     = document.getElementById(`add-btn-${si}`);
-  const imgEl   = document.getElementById(`shop-img-${si}`);
+  const linkEl  = document.getElementById(`shop-link-${si}`);
   if (!card) return;
 
-  const imgSrc = imgEl?.tagName === 'IMG' ? imgEl.src : null;
+  const imgEl  = linkEl?.querySelector('img.shop-product-img');
+  const imgSrc = imgEl?.src || null;
   const item = {
     id:         card.dataset.itemId || `shop_${Date.now()}_${si}`,
     name:       card.dataset.itemName,
     why:        card.dataset.itemWhy,
     pairs:      card.dataset.itemPairs,
     anchorName: card.dataset.anchor,
+    searchUrl:  card.dataset.searchUrl,
     imgSrc,
     checked:    false,
     addedAt:    Date.now()
@@ -1692,16 +1774,51 @@ function handleAddToList(si) {
   }
 }
 
-async function fetchProductImage(query, index) {
-  const el = document.getElementById(`shop-img-${index}`);
-  if (!el) return;
+async function fetchShopOG(query, linkId, placeholderId, footerId, titleId) {
+  const linkEl        = document.getElementById(linkId);
+  const placeholderEl = document.getElementById(placeholderId);
+  const footerEl      = document.getElementById(footerId);
+  const titleEl       = document.getElementById(titleId);
+  if (!linkEl || !placeholderEl || !footerEl || !titleEl) return;
+
+  // Build Google Shopping search URL as the tap destination
+  const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query + ' clothing')}`;
+
+  // Try to fetch OG metadata via allorigins proxy from a shopping search
   try {
-    // Unsplash Source: free, no API key, CORS-friendly, returns real fashion photos
-    const q   = encodeURIComponent(query.replace(/['"]/g, '').trim());
-    const src = `https://source.unsplash.com/400x400/?${q},clothing,fashion`;
-    el.outerHTML = `<img class="shop-product-img" src="${src}" alt="${escHtml(query)}" loading="lazy" onerror="this.outerHTML='<div class=\\'shop-product-img-placeholder\\'>🛍️</div>'">`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(searchUrl)}`;
+    const res      = await fetch(proxyUrl, { signal: AbortSignal.timeout(6000) });
+    const json     = await res.json();
+    const html     = json.contents || '';
+
+    // Try to extract OG image
+    const ogImg   = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
+                 || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1];
+    // Try to extract first product title
+    const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1]
+                 || html.match(/<title>([^<]+)<\/title>/i)?.[1]?.split(' - ')?.[0]?.trim();
+
+    if (ogImg && ogImg.startsWith('http')) {
+      // Show image + footer
+      const imgEl = document.createElement('img');
+      imgEl.className = 'shop-product-img';
+      imgEl.src = ogImg;
+      imgEl.alt = query;
+      imgEl.loading = 'lazy';
+      imgEl.onerror = () => { imgEl.style.display = 'none'; };
+      linkEl.insertBefore(imgEl, placeholderEl);
+    }
+
+    // Always show footer with title (or fallback) and "Shop →"
+    titleEl.textContent = ogTitle || query;
+    placeholderEl.style.display = 'none';
+    footerEl.style.display = 'flex';
+
   } catch {
-    // keep placeholder
+    // Proxy failed — show simple "Shop this item" footer without image
+    titleEl.textContent = query;
+    placeholderEl.style.display = 'none';
+    footerEl.style.display = 'flex';
   }
 }
 
@@ -1909,10 +2026,14 @@ async function getSuggestion() {
 
   const todCtx     = state.tod     ? ` (${state.tod.toLowerCase()})` : '';
   const settingCtx = state.setting ? ` at a ${state.setting}` : '';
+  const styleProfile = loadStyleProfile();
+  const profileBlock = styleProfile
+    ? `\nPERSONAL STYLE PROFILE — always follow these rules:\n${styleProfile}\n`
+    : '';
   const promptText = `You are a personal stylist building a complete outfit for: ${state.occasion}${todCtx}${settingCtx}.
 
 ${wxCtx}
-
+${profileBlock}
 The user's wardrobe contains ONLY these ${state.garments.length} items:
 ${itemList}
 ${anchorBlock}${prefBlock}
@@ -1941,6 +2062,7 @@ Return this exact JSON shape:
   "tuck": "tucked in or untucked, with one sentence why",
   "score": 8,
   "scoreReason": "one sentence explaining the score",
+  "to10": ["short actionable note 1 that would push this to a 10", "short actionable note 2", "short actionable note 3"],
   "shopping": [
     {
       "item": "specific item to buy, e.g. Slim-fit navy chinos",
@@ -1949,6 +2071,7 @@ Return this exact JSON shape:
     }
   ]
 }
+For "to10": provide 2-4 concise, specific, actionable notes covering styling, grooming, accessories, or clothing adjustments that would elevate this outfit to a perfect 10. These can reference items to buy OR free styling changes (e.g. rolling sleeves, adding a pocket square, shoe polish, etc.). If the outfit is already a 9+, still suggest 1-2 refinements.
 Include 1-3 shopping suggestions for items NOT in the wardrobe that would push the outfit closer to a 10/10. If the outfit is already a 9 or 10, include 1 aspirational upgrade.`;
 
   try {
@@ -2045,10 +2168,23 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
     if (outfit.tuck)       bodyParts.push(`👔 Tuck: ${outfit.tuck}`);
     if (outfit.scoreReason) bodyParts.push(`★ ${outfit.scoreReason}`);
 
+    const to10HTML = (outfit.to10 && outfit.to10.length > 0) ? `
+      <div class="to10-block">
+        <div class="to10-label">⬆️ To make this a 10</div>
+        <div class="to10-list">
+          ${outfit.to10.map(note => `
+            <div class="to10-item">
+              <div class="to10-bullet">↑</div>
+              <span>${escHtml(note)}</span>
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+
     rBody.innerHTML = `
       ${imageThumbs ? `<div class="pairing-image-strip" style="margin-bottom:12px;">${imageThumbs}</div>` : ''}
       <div class="pairing-items-list" style="margin-bottom:12px;">${itemRows}</div>
-      <div style="font-size:14px;color:var(--text-muted);line-height:1.75;white-space:pre-wrap;">${escHtml(bodyParts.join('\n\n'))}</div>`;
+      <div style="font-size:14px;color:var(--text-muted);line-height:1.75;white-space:pre-wrap;">${escHtml(bodyParts.join('\n\n'))}</div>
+      ${to10HTML}`;
 
     rPieces.innerHTML = '';
 
@@ -2062,11 +2198,21 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
         ${shopItems.map((s, si) => {
           const itemId     = `ofit_${Date.now()}_${si}`;
           const alreadyAdded = loadShopList().find(i => i.name === s.item);
+          const searchUrl  = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' clothing')}`;
           const pairTags   = (s.pairs || '').split(',').map(t => t.trim()).filter(Boolean)
             .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
           return `
-            <div class="shop-card" id="ofit-card-${si}" data-item-id="${itemId}" data-item-name="${escHtml(s.item)}" data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs || '')}" data-anchor="Outfit Builder">
-              <div class="shop-product-img-placeholder" id="ofit-img-${si}">🛍️</div>
+            <div class="shop-card" id="ofit-card-${si}" data-item-id="${itemId}" data-item-name="${escHtml(s.item)}" data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs || '')}" data-anchor="Outfit Builder" data-search-url="${escHtml(searchUrl)}">
+              <a class="shop-product-link-area" id="ofit-link-${si}" href="${escHtml(searchUrl)}" target="_blank" rel="noopener">
+                <div class="shop-product-placeholder" id="ofit-placeholder-${si}">
+                  <div class="shop-product-placeholder-text">🛍️ ${escHtml(s.item)}</div>
+                  <div class="shop-product-placeholder-loading"><span class="analyzing-spinner"></span>Loading…</div>
+                </div>
+                <div class="shop-product-link-footer" style="display:none;" id="ofit-footer-${si}">
+                  <span class="shop-product-link-title" id="ofit-link-title-${si}"></span>
+                  <span class="shop-product-link-cta">Shop →</span>
+                </div>
+              </a>
               <div class="shop-card-header">
                 <div class="shop-card-title">🛍️ ${escHtml(s.item)}</div>
                 <div class="shop-badge">Near 10/10</div>
@@ -2079,7 +2225,7 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
         }).join('')}`;
       outfitShopList.innerHTML = shopHTML;
       outfitShopSection.style.display = 'block';
-      shopItems.forEach((s, si) => fetchOutfitProductImage(s.item, si));
+      shopItems.forEach((s, si) => fetchShopOG(s.item, `ofit-link-${si}`, `ofit-placeholder-${si}`, `ofit-footer-${si}`, `ofit-link-title-${si}`));
     } else {
       outfitShopSection.style.display = 'none';
     }
@@ -2088,7 +2234,7 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
     document.getElementById('outfitCacheSection').style.display = 'block';
 
     // Seed follow-up chat
-    initOutfitChat(`${outfit.title}\n\n${outfit.why}\nItems: ${itemNames.join(', ')}\nTuck: ${outfit.tuck}\nScore: ${outfit.score}/10`);
+    initOutfitChat(`${outfit.title}\n\n${outfit.why}\nItems: ${itemNames.join(', ')}\nTuck: ${outfit.tuck}\nScore: ${outfit.score}/10\nTo make it a 10: ${(outfit.to10 || []).join('; ')}`);
 
   } catch(err) {
     rTitle.textContent = 'Something went wrong';
@@ -2104,15 +2250,17 @@ Include 1-3 shopping suggestions for items NOT in the wardrobe that would push t
 function handleOutfitAddToList(si) {
   const card   = document.getElementById(`ofit-card-${si}`);
   const btn    = document.getElementById(`ofit-add-btn-${si}`);
-  const imgEl  = document.getElementById(`ofit-img-${si}`);
+  const linkEl = document.getElementById(`ofit-link-${si}`);
   if (!card) return;
-  const imgSrc = imgEl?.tagName === 'IMG' ? imgEl.src : null;
+  const imgEl  = linkEl?.querySelector('img.shop-product-img');
+  const imgSrc = imgEl?.src || null;
   const item = {
     id:         card.dataset.itemId || `ofit_${Date.now()}_${si}`,
     name:       card.dataset.itemName,
     why:        card.dataset.itemWhy,
     pairs:      card.dataset.itemPairs,
     anchorName: card.dataset.anchor,
+    searchUrl:  card.dataset.searchUrl,
     imgSrc,
     checked:    false,
     addedAt:    Date.now()
@@ -2123,16 +2271,6 @@ function handleOutfitAddToList(si) {
     btn.classList.add('added');
     showToast('Saved to Shopping List');
   }
-}
-
-async function fetchOutfitProductImage(query, index) {
-  const el = document.getElementById(`ofit-img-${index}`);
-  if (!el) return;
-  try {
-    const q   = encodeURIComponent(query.replace(/['"]/g, '').trim());
-    const src = `https://source.unsplash.com/400x400/?${q},clothing,fashion`;
-    el.outerHTML = `<img class="shop-product-img" src="${src}" alt="${escHtml(query)}" loading="lazy" onerror="this.outerHTML='<div class=\\'shop-product-img-placeholder\\'>🛍️</div>'">`;
-  } catch { /* keep placeholder */ }
 }
 
 function clearOutfitCache() {
@@ -2212,14 +2350,22 @@ function renderShoppingList() {
   grid.style.display  = n > 0 ? 'block' : 'none';
 
   grid.innerHTML = list.map((item, idx) => {
-    const imgEl = item.imgSrc
-      ? `<img class="shop-list-img" src="${escHtml(item.imgSrc)}" alt="${escHtml(item.name)}" loading="lazy" onerror="this.style.display='none'">`
-      : `<div style="font-size:28px;text-align:center;padding:12px 0;color:var(--text-dim);">🛍️</div>`;
+    const searchUrl = item.searchUrl || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent((item.name || '') + ' clothing')}`;
+    const linkContent = item.imgSrc
+      ? `<img class="shop-list-img" src="${escHtml(item.imgSrc)}" alt="${escHtml(item.name)}" loading="lazy" onerror="this.style.display='none'">
+         <div class="shop-product-link-footer">
+           <span class="shop-product-link-title">${escHtml(item.name)}</span>
+           <span class="shop-product-link-cta">Shop →</span>
+         </div>`
+      : `<div class="shop-product-link-footer">
+           <span class="shop-product-link-title">${escHtml(item.name)}</span>
+           <span class="shop-product-link-cta">Shop →</span>
+         </div>`;
     const pairTags = (item.pairs || '').split(',').map(t => t.trim()).filter(Boolean)
       .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
     return `
       <div class="shop-list-card${item.checked ? ' checked' : ''}" id="sli-${item.id}">
-        ${imgEl}
+        <a class="shop-product-link-area" href="${escHtml(searchUrl)}" target="_blank" rel="noopener" style="margin-bottom:10px;">${linkContent}</a>
         <div class="shop-list-card-header">
           <button class="shop-list-check${item.checked ? ' done' : ''}" onclick="toggleShopItem('${item.id}')" title="Mark done">
             ${item.checked ? '✓' : ''}
@@ -2253,6 +2399,32 @@ function clearShoppingList() {
   saveShopList([]);
   renderShoppingList();
   updateShopListBadge();
+}
+
+// ─── Style profile ────────────────────────────────────────────
+function loadStyleProfile() {
+  return localStorage.getItem(LS_KEY_STYLE_PROFILE) || '';
+}
+function saveStyleProfile() {
+  const val = (document.getElementById('styleProfileInput')?.value || '').trim();
+  localStorage.setItem(LS_KEY_STYLE_PROFILE, val);
+  cacheClearAll(); // profile change invalidates all cached recommendations
+  document.getElementById('profileSaveStatus').textContent = '✓ Saved — cache cleared';
+  document.getElementById('profileSaveStatus').style.color = 'var(--success)';
+  showToast('Style profile saved — recommendations refreshed');
+}
+function onStyleProfileChange() {
+  document.getElementById('profileSaveStatus').textContent = 'Unsaved changes';
+  document.getElementById('profileSaveStatus').style.color = 'var(--accent)';
+}
+function initStyleProfileUI() {
+  const ta  = document.getElementById('styleProfileInput');
+  const val = loadStyleProfile();
+  if (ta) {
+    ta.value = val;
+    document.getElementById('profileSaveStatus').textContent = val ? '✓ Profile saved' : 'Not saved';
+    document.getElementById('profileSaveStatus').style.color = val ? 'var(--success)' : 'var(--text-dim)';
+  }
 }
 
 // ─── Recommendation cache ──────────────────────────────────────
@@ -2300,17 +2472,18 @@ function cachePrune() {
 }
 
 function buildOutfitCacheKey() {
-  // Fingerprint: sorted wardrobe IDs + occasion + tod + setting + prefs + anchors
   const wardrobeFingerprint = [...state.garments].sort((a,b) => a.id.localeCompare(b.id)).map(g => g.id).join(',');
-  const prefsStr  = JSON.stringify(state.stylePrefs);
+  const prefsStr   = JSON.stringify(state.stylePrefs);
   const anchorsStr = JSON.stringify(state.anchors);
-  const str = [wardrobeFingerprint, state.occasion, state.tod, state.setting, prefsStr, anchorsStr].join('|');
+  const profile    = loadStyleProfile();
+  const str = [wardrobeFingerprint, state.occasion, state.tod, state.setting, prefsStr, anchorsStr, profile].join('|');
   return 'outfit_' + simpleHash(str);
 }
 
 function buildPairingsCacheKey(anchorId) {
   const wardrobeFingerprint = [...state.garments].sort((a,b) => a.id.localeCompare(b.id)).map(g => g.id).join(',');
-  const str = [anchorId, wardrobeFingerprint, state.occasion, state.tod, state.setting].join('|');
+  const profile = loadStyleProfile();
+  const str = [anchorId, wardrobeFingerprint, state.occasion, state.tod, state.setting, profile].join('|');
   return 'pairs_' + simpleHash(str);
 }
 
