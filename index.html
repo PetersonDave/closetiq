@@ -442,6 +442,38 @@ section + section { padding-top: 0; }
 }
 .add-to-list-btn:active { background: rgba(107,191,142,0.1); }
 .add-to-list-btn.added { border-color: var(--text-dim); color: var(--text-dim); cursor: default; }
+/* Perfect 10 outfit card */
+.perfect10-card {
+  background: rgba(107,191,142,0.06); border: 0.5px solid rgba(107,191,142,0.3);
+  border-radius: var(--radius); padding: 16px; margin-top: 0;
+}
+.perfect10-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 10px; }
+.perfect10-title { font-family: var(--font-serif); font-size: 17px; color: var(--success); line-height: 1.3; flex: 1; }
+.perfect10-badge {
+  font-size: 13px; font-weight: 600; background: rgba(107,191,142,0.15);
+  color: var(--success); border: 0.5px solid rgba(107,191,142,0.3);
+  border-radius: 20px; padding: 4px 10px; flex-shrink: 0;
+}
+.perfect10-why { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 10px; }
+.perfect10-tuck { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+
+/* Inline shopping within outfit card */
+.inline-shop-section { margin-top: 14px; border-top: 0.5px solid var(--border); padding-top: 12px; }
+.inline-shop-label {
+  font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--success); font-weight: 500; margin-bottom: 8px;
+}
+.inline-shop-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: rgba(107,191,142,0.06); border: 0.5px solid rgba(107,191,142,0.2);
+  border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 7px;
+}
+.inline-shop-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.inline-shop-body { flex: 1; min-width: 0; }
+.inline-shop-name { font-size: 13px; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+.inline-shop-why { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.inline-shop-link { display: inline-block; margin-top: 5px; font-size: 11px; color: var(--accent); text-decoration: none; font-weight: 500; }
+
 .shop-section-label {
   font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
   color: var(--text-dim); font-weight: 500; margin: 20px 0 10px;
@@ -1588,15 +1620,17 @@ Tuck: [tucked in / untucked + one sentence why]
 To10: [2-3 short actionable notes separated by " | " that would push this outfit to a 10 — cover styling tweaks, grooming, or accessories]
 ---
 
-After all outfits, add a shopping recommendations section. Suggest up to 5 items the user could purchase that would pair exceptionally well with the anchor item and push an outfit close to a 10/10. These should fill genuine gaps or elevate what the wardrobe is missing.
+After all outfits, add a single "perfect 10 outfit" section — a complete outfit built around the anchor item that would score a 10/10, using a mix of existing wardrobe items AND items to purchase. This represents the ideal complete look.
 
-Use this EXACT format for each shopping suggestion (repeat 1-3 times):
+Use this EXACT format (only once):
 
 ===
-BUY [N]
-Item: [specific item description, e.g. "Slim-fit navy chinos"]
-Why: [1-2 sentences on why this purchase would elevate the anchor item and what score it would unlock]
-Pairs with: [comma-separated list of existing wardrobe items it would also work well with]
+PERFECT10
+Title: [short punchy title for this ideal outfit]
+Wardrobe items: [comma-separated existing wardrobe items to include]
+Buy items: [comma-separated NEW items to purchase, each as "Item name: why to buy it"]
+Why: [1-2 sentences on why this is a perfect 10 outfit]
+Tuck: [tucked in or untucked recommendation]
 ===
 
 STRICT RULES:
@@ -1604,7 +1638,7 @@ STRICT RULES:
 - Only use wardrobe items that appear in the wardrobe list by their exact name.
 - All outfits must be genuinely distinct combinations.
 - If the wardrobe doesn't have enough variety for 5 outfits, generate as many as possible.
-- Shopping suggestions must be items NOT in the wardrobe.
+- Buy items must be items NOT in the wardrobe.
 - Do not include any text outside the --- and === blocks.`;
 
   try {
@@ -1765,38 +1799,83 @@ function renderPairings(text, anchorName) {
       </div>`;
   }).join('');
 
-  const shopHTML = shopItems.length > 0 ? `
-    <div class="shop-section-label">Consider buying</div>
-    ${shopItems.map((s, si) => {
-      const itemId = `shop_${Date.now()}_${si}`;
-      const alreadyAdded = loadShopList().find(i => i.name === s.item);
-      const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' ' + (loadGender() === 'womens' ? "women's" : loadGender() === 'mens' ? "men's" : '') + ' clothing')}`;
-      const pairTags = s.pairs.split(',').map(t => t.trim()).filter(Boolean)
-        .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
-      return `
-        <div class="shop-card" id="shop-card-${si}" data-item-id="${itemId}" data-item-name="${escHtml(s.item)}" data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs)}" data-anchor="${escHtml(anchorName)}" data-search-url="${escHtml(searchUrl)}">
-          <a class="shop-product-link-area" id="shop-link-${si}" href="${escHtml(searchUrl)}" target="_blank" rel="noopener">
-            <div class="shop-product-placeholder" id="shop-placeholder-${si}">
-              <div class="shop-product-placeholder-text">🛍️ ${escHtml(s.item)}</div>
-              <div class="shop-product-placeholder-loading"><span class="analyzing-spinner"></span>Loading…</div>
-            </div>
-            <div class="shop-product-link-footer" style="display:none;" id="shop-footer-${si}">
-              <span class="shop-product-link-title" id="shop-link-title-${si}"></span>
-              <span class="shop-product-link-cta">Shop →</span>
-            </div>
-          </a>
-          <div class="shop-card-header">
-            <div class="shop-card-title">🛍️ ${escHtml(s.item)}</div>
-            <div class="shop-badge">Near 10/10</div>
-          </div>
-          <div class="shop-why">${escHtml(s.why)}</div>
-          ${pairTags ? `<div class="shop-pairs-label">Also pairs with</div><div class="shop-pairs">${pairTags}</div>` : ''}
-          <button class="add-to-list-btn${alreadyAdded ? ' added' : ''}" id="add-btn-${si}"
-            onclick="handleAddToList(${si})">${alreadyAdded ? '✓ Added to list' : '+ Save to Shopping List'}</button>
-        </div>`;
-    }).join('')}` : '';
+  // Parse PERFECT10 block
+  const p10Block = text.split('===').map(b => b.trim()).find(b => b.startsWith('PERFECT10'));
+  let perfect10HTML = '';
+  if (p10Block) {
+    const p10Title    = (p10Block.match(/Title:\s*(.+)/i)         || [])[1]?.trim() || 'Perfect 10 Outfit';
+    const p10Wardrobe = (p10Block.match(/Wardrobe items:\s*(.+)/i)|| [])[1]?.trim() || '';
+    const p10Buy      = (p10Block.match(/Buy items:\s*(.+)/i)     || [])[1]?.trim() || '';
+    const p10Why      = (p10Block.match(/Why:\s*(.+)/i)           || [])[1]?.trim() || '';
+    const p10Tuck     = (p10Block.match(/Tuck:\s*(.+)/i)          || [])[1]?.trim() || '';
 
-  list.innerHTML = outfitHTML + shopHTML;
+    const wardrobeNames = p10Wardrobe.split(',').map(s => s.trim()).filter(Boolean);
+    const buyItems      = p10Buy.split(',').map(s => s.trim()).filter(Boolean);
+
+    // Image strip: wardrobe items show real photos, buy items show shop placeholder
+    const allItemStrip = [
+      ...wardrobeNames.map(name => {
+        const g = state.garments.find(w =>
+          w.name.toLowerCase().includes(name.toLowerCase()) ||
+          name.toLowerCase().includes(w.name.toLowerCase())
+        );
+        return g
+          ? `<div class="pairing-image-thumb" style="border-color:rgba(107,191,142,0.3);">
+               <img src="${g.src}" alt="${escHtml(g.name)}" loading="lazy">
+               <div class="pairing-image-thumb-label">${escHtml(g.name)}</div>
+             </div>`
+          : '';
+      }),
+      ...buyItems.map(b => {
+        const name = b.split(':')[0].trim();
+        const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(name + ' ' + (loadGender() === 'womens' ? "women's" : loadGender() === 'mens' ? "men's" : '') + ' clothing')}`;
+        return `<a class="pairing-image-thumb" href="${escHtml(searchUrl)}" target="_blank" rel="noopener"
+                   style="border:1.5px dashed rgba(107,191,142,0.4);text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(107,191,142,0.06);">
+                  <div style="font-size:20px;">🛍️</div>
+                  <div class="pairing-image-thumb-label" style="color:rgba(107,191,142,0.8);position:relative;background:none;padding:4px 4px 0;">${escHtml(name.length > 14 ? name.slice(0,12)+'…' : name)}</div>
+                </a>`;
+      })
+    ].filter(Boolean).join('');
+
+    // Buy item rows
+    const buyRows = buyItems.map(b => {
+      const [namePart, ...whyParts] = b.split(':');
+      const name = namePart.trim();
+      const why  = whyParts.join(':').trim();
+      const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(name + ' ' + (loadGender() === 'womens' ? "women's" : loadGender() === 'mens' ? "men's" : '') + ' clothing')}`;
+      const alreadyAdded = loadShopList().find(i => i.name === name);
+      const itemId = `p10_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+      return `<div class="inline-shop-item"
+                   data-item-id="${itemId}" data-item-name="${escHtml(name)}"
+                   data-item-why="${escHtml(why)}" data-item-pairs="${escHtml(p10Wardrobe)}"
+                   data-anchor="${escHtml(anchorName)}"
+                   data-search-url="${escHtml(searchUrl)}" id="p10-item-${itemId}">
+                <div class="inline-shop-icon">🛍️</div>
+                <div class="inline-shop-body">
+                  <div class="inline-shop-name">${escHtml(name)}</div>
+                  ${why ? `<div class="inline-shop-why">${escHtml(why)}</div>` : ''}
+                  <a class="inline-shop-link" href="${escHtml(searchUrl)}" target="_blank" rel="noopener">Shop →</a>
+                  <button class="add-to-list-btn${alreadyAdded ? ' added' : ''}" style="margin-top:6px;"
+                    onclick="addP10ToList('${itemId}')">${alreadyAdded ? '✓ Added to list' : '+ Save to Cart'}</button>
+                </div>
+              </div>`;
+    }).join('');
+
+    perfect10HTML = `
+      <div class="shop-section-label" style="margin-top:16px;">Perfect 10 Outfit</div>
+      <div class="perfect10-card">
+        <div class="perfect10-header">
+          <div class="perfect10-title">${escHtml(p10Title)}</div>
+          <div class="perfect10-badge">10/10</div>
+        </div>
+        ${allItemStrip ? `<div class="pairing-image-strip">${allItemStrip}</div>` : ''}
+        <div class="perfect10-why">${escHtml(p10Why)}</div>
+        ${buyRows}
+        ${p10Tuck ? `<div class="perfect10-tuck">👔 Tuck: ${escHtml(p10Tuck)}</div>` : ''}
+      </div>`;
+  }
+
+  list.innerHTML = outfitHTML + perfect10HTML;
 
   // Seed per-card chat contexts for each pairing
   const wardrobeDesc = state.garments.map(g =>
@@ -1809,9 +1888,47 @@ function renderPairings(text, anchorName) {
 
   // Also seed the shared pairings follow-up chat (for backward compat)
   initPairingsChat(text, anchorName);
+}
 
-  // Fetch OG metadata for shop cards asynchronously
-  shopItems.forEach((s, si) => fetchShopOG(s.item, `shop-link-${si}`, `shop-placeholder-${si}`, `shop-footer-${si}`, `shop-link-title-${si}`));
+function addP10ToList(itemId) {
+  const el = document.getElementById(`p10-item-${itemId}`);
+  if (!el) return;
+  const item = {
+    id: el.dataset.itemId || itemId,
+    name: el.dataset.itemName,
+    why:  el.dataset.itemWhy,
+    pairs: el.dataset.itemPairs,
+    anchorName: el.dataset.anchor,
+    searchUrl:  el.dataset.searchUrl,
+    imgSrc: null, checked: false, addedAt: Date.now()
+  };
+  const added = addToShoppingList(item);
+  if (added) {
+    const btn = el.querySelector('.add-to-list-btn');
+    if (btn) { btn.textContent = '✓ Added to list'; btn.classList.add('added'); }
+    showToast('Saved to Cart');
+  }
+}
+
+function addOISToList(itemId) {
+  const el = document.getElementById(`ois-item-${itemId}`);
+  if (!el) return;
+  const item = {
+    id: el.dataset.itemId || itemId,
+    name: el.dataset.itemName,
+    why:  el.dataset.itemWhy,
+    pairs: el.dataset.itemPairs,
+    anchorName: el.dataset.anchor,
+    searchUrl:  el.dataset.searchUrl,
+    imgSrc: null, checked: false, addedAt: Date.now()
+  };
+  const added = addToShoppingList(item);
+  if (added) {
+    const btn = el.querySelector('.add-to-list-btn');
+    if (btn) { btn.textContent = '✓ Added to list'; btn.classList.add('added'); }
+    showToast('Saved to Cart');
+  }
+}
 }
 
 function handleAddToList(si) {
@@ -2158,11 +2275,38 @@ function buildOutfitCardBody(outfit) {
       </div>
     </div>` : '';
 
+  const inlineShopHTML = (outfit.shopping && outfit.shopping.length > 0) ? `
+    <div class="inline-shop-section">
+      <div class="inline-shop-label">🛍️ Buy to make this a 10</div>
+      ${outfit.shopping.map(s => {
+        const gender = loadGender();
+        const gStr   = gender === 'womens' ? "women's" : gender === 'mens' ? "men's" : '';
+        const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' ' + gStr + ' clothing')}`;
+        const alreadyAdded = loadShopList().find(i => i.name === s.item);
+        const iid = `ois_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+        return `<div class="inline-shop-item"
+                     data-item-id="${iid}" data-item-name="${escHtml(s.item)}"
+                     data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs||'')}"
+                     data-anchor="Outfit Builder" data-search-url="${escHtml(searchUrl)}"
+                     id="ois-item-${iid}">
+                  <div class="inline-shop-icon">🛍️</div>
+                  <div class="inline-shop-body">
+                    <div class="inline-shop-name">${escHtml(s.item)}</div>
+                    <div class="inline-shop-why">${escHtml(s.why)}</div>
+                    <a class="inline-shop-link" href="${escHtml(searchUrl)}" target="_blank" rel="noopener">Shop →</a>
+                    <button class="add-to-list-btn${alreadyAdded ? ' added' : ''}" style="margin-top:6px;"
+                      onclick="addOISToList('${iid}')">${alreadyAdded ? '✓ Added to list' : '+ Save to Cart'}</button>
+                  </div>
+                </div>`;
+      }).join('')}
+    </div>` : '';
+
   return `
     ${imageThumbs ? `<div class="pairing-image-strip">${imageThumbs}</div>` : ''}
     <div class="pairing-items-list" style="margin-bottom:12px;">${itemRows}</div>
     <div style="font-size:14px;color:var(--text-muted);line-height:1.75;white-space:pre-wrap;">${escHtml(bodyParts.join('\n\n'))}</div>
-    ${to10HTML}`;
+    ${to10HTML}
+    ${inlineShopHTML}`;
 }
 
 function buildOutfitCardHTML(outfit, rankLabel, wxBadge, cardIdx) {
@@ -2321,7 +2465,7 @@ Return an array of exactly 3 distinct outfit recommendations, ranked best to wor
     ]
   }
 ]
-Each outfit must use a genuinely different combination of items. For "to10": 2-4 concise actionable notes covering styling, grooming, or accessories. Include 2-3 shopping suggestions per outfit for items NOT in the wardrobe (aim for 5 unique items across all outfits combined, prioritizing variety). If fewer than 3 distinct outfits are possible from the wardrobe, generate as many as possible (minimum 1).`;
+Each outfit must use a genuinely different combination of items. For "to10": 2-4 concise actionable notes covering styling, grooming, or accessories. For "shopping": include exactly 2-3 items per outfit that are NOT in the wardrobe — these appear inline in the outfit card as "what to buy to make this a 10". If fewer than 3 distinct outfits are possible from the wardrobe, generate as many as possible (minimum 1).`;
 
   try {
     const cacheKey    = buildOutfitCacheKey();
@@ -2381,55 +2525,10 @@ Each outfit must use a genuinely different combination of items. For "to10": 2-4
       cardChatContexts[`outfit-chat-${i}`] = { context, history: [] };
     });
 
-    // Collect all shopping items across all outfits (deduplicated by name)
-    const allShopItems = [];
-    const seenShop = new Set();
-    outfits.forEach(o => {
-      (o.shopping || []).forEach(s => {
-        if (!seenShop.has(s.item)) { seenShop.add(s.item); allShopItems.push(s); }
-      });
-    });
-
-    // Shopping recommendations
+    // Shopping is now inline in each outfit card via buildOutfitCardBody
+    // Hide the old separate shopping section if it exists
     const outfitShopSection = document.getElementById('outfitShopSection');
-    const outfitShopList    = document.getElementById('outfitShopList');
-    if (allShopItems.length > 0) {
-      const shopHTML = `
-        <div class="shop-section-label">Consider buying</div>
-        ${allShopItems.map((s, si) => {
-          const itemId     = `ofit_${Date.now()}_${si}`;
-          const alreadyAdded = loadShopList().find(i => i.name === s.item);
-          const searchUrl  = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' ' + (loadGender() === 'womens' ? "women's" : loadGender() === 'mens' ? "men's" : '') + ' clothing')}`;
-          const pairTags   = (s.pairs || '').split(',').map(t => t.trim()).filter(Boolean)
-            .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
-          return `
-            <div class="shop-card" id="ofit-card-${si}" data-item-id="${itemId}" data-item-name="${escHtml(s.item)}" data-item-why="${escHtml(s.why)}" data-item-pairs="${escHtml(s.pairs || '')}" data-anchor="Outfit Builder" data-search-url="${escHtml(searchUrl)}">
-              <a class="shop-product-link-area" id="ofit-link-${si}" href="${escHtml(searchUrl)}" target="_blank" rel="noopener">
-                <div class="shop-product-placeholder" id="ofit-placeholder-${si}">
-                  <div class="shop-product-placeholder-text">🛍️ ${escHtml(s.item)}</div>
-                  <div class="shop-product-placeholder-loading"><span class="analyzing-spinner"></span>Loading…</div>
-                </div>
-                <div class="shop-product-link-footer" style="display:none;" id="ofit-footer-${si}">
-                  <span class="shop-product-link-title" id="ofit-link-title-${si}"></span>
-                  <span class="shop-product-link-cta">Shop →</span>
-                </div>
-              </a>
-              <div class="shop-card-header">
-                <div class="shop-card-title">🛍️ ${escHtml(s.item)}</div>
-                <div class="shop-badge">Near 10/10</div>
-              </div>
-              <div class="shop-why">${escHtml(s.why)}</div>
-              ${pairTags ? `<div class="shop-pairs-label">Also pairs with</div><div class="shop-pairs">${pairTags}</div>` : ''}
-              <button class="add-to-list-btn${alreadyAdded ? ' added' : ''}" id="ofit-add-btn-${si}"
-                onclick="handleOutfitAddToList(${si})">${alreadyAdded ? '✓ Added to list' : '+ Save to Shopping List'}</button>
-            </div>`;
-        }).join('')}`;
-      outfitShopList.innerHTML = shopHTML;
-      outfitShopSection.style.display = 'block';
-      allShopItems.forEach((s, si) => fetchShopOG(s.item, `ofit-link-${si}`, `ofit-placeholder-${si}`, `ofit-footer-${si}`, `ofit-link-title-${si}`));
-    } else {
-      outfitShopSection.style.display = 'none';
-    }
+    if (outfitShopSection) outfitShopSection.style.display = 'none';
 
     // Show cache clear button
     document.getElementById('outfitCacheSection').style.display = 'block';
