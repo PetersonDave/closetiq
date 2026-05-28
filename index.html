@@ -661,7 +661,7 @@ section + section { padding-top: 0; }
     <button class="tab-btn active" id="tabWardrobeBtn" onclick="switchTab('wardrobe')">👗 Wardrobe</button>
     <button class="tab-btn" id="tabPairingsBtn" onclick="switchTab('pairings')">🔍 Pairings</button>
     <button class="tab-btn" id="tabOutfitBtn" onclick="switchTab('outfit')">👕 Outfits</button>
-    <button class="tab-btn" id="tabShopBtn" onclick="switchTab('shop')">🛒 Shopping</button>
+    <button class="tab-btn" id="tabShopBtn" onclick="switchTab('shop')">🛒 Cart</button>
   </div>
 
   <!-- ── TAB: Outfit Builder ── -->
@@ -771,26 +771,8 @@ section + section { padding-top: 0; }
 
     <!-- Outfit result -->
     <section id="resultSection" style="display:none; padding-top:0;">
-      <div class="result-card">
-        <div class="result-header">
-          <div class="result-title" id="resultTitle"></div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
-            <div class="weather-badge" id="resultWeather" style="display:none;"></div>
-            <div class="score-badge" id="resultScore" style="display:none;"></div>
-          </div>
-        </div>
-        <div class="result-body" id="resultBody"></div>
-        <div class="piece-tags" id="resultPieces"></div>
-        <div class="followup-section">
-          <div class="followup-label">Ask a follow-up</div>
-          <div class="chat-history" id="outfitChatHistory"></div>
-          <div class="chat-input-row">
-            <textarea class="chat-input" id="outfitChatInput" placeholder="Ask a question…" rows="1"
-              onkeydown="handleChatKey(event,'outfit')" oninput="autoResize(this)"></textarea>
-            <button class="chat-send-btn" id="outfitChatSend" onclick="sendFollowUp('outfit')" title="Send">➤</button>
-          </div>
-        </div>
-      </div>
+      <!-- All outfit cards rendered by JS -->
+      <div id="outfitFirstCard"></div>
       <!-- Additional outfit cards (2nd and 3rd picks) -->
       <div id="outfitExtraCards"></div>
       <!-- Outfit shopping recommendations -->
@@ -839,17 +821,6 @@ section + section { padding-top: 0; }
         </div>
       </div>
       <div id="pairingsList"></div>
-      <div class="result-card" id="pairingsChatCard" style="display:none; margin-top:12px;">
-        <div class="followup-section" style="margin-top:0;border-top:none;padding-top:0;">
-          <div class="followup-label">Ask a follow-up</div>
-          <div class="chat-history" id="pairingsChatHistory"></div>
-          <div class="chat-input-row">
-            <textarea class="chat-input" id="pairingsChatInput" placeholder="Ask a question…" rows="1"
-              onkeydown="handleChatKey(event,'pairings')" oninput="autoResize(this)"></textarea>
-            <button class="chat-send-btn" id="pairingsChatSend" onclick="sendFollowUp('pairings')" title="Send">➤</button>
-          </div>
-        </div>
-      </div>
     </section>
 
   </div><!-- end tabPairings -->
@@ -1717,6 +1688,7 @@ function renderPairings(text, anchorName) {
   const outfitHTML = parsed.map((p, i) => {
     const scoreClass = p.score >= 8 ? 'score-high' : p.score >= 5 ? 'score-mid' : 'score-low';
     const itemNames  = p.items.split(',').map(s => s.trim()).filter(Boolean);
+    const chatId     = `pairing-chat-${i}`;
 
     const itemRows = itemNames.map(name => {
       const icon = categoryIcon(name, state.garments);
@@ -1761,6 +1733,15 @@ function renderPairings(text, anchorName) {
                 </div>`).join('')}
             </div>
           </div>` : ''}
+        <div class="followup-section">
+          <div class="followup-label">Ask a follow-up</div>
+          <div class="chat-history" id="${chatId}-history"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="${chatId}-input" placeholder="Ask a question…" rows="1"
+              onkeydown="handleCardChatKey(event,'${chatId}')" oninput="autoResize(this)"></textarea>
+            <button class="chat-send-btn" onclick="sendCardFollowUp('${chatId}')" title="Send">➤</button>
+          </div>
+        </div>
       </div>`;
   }).join('');
 
@@ -1797,7 +1778,16 @@ function renderPairings(text, anchorName) {
 
   list.innerHTML = outfitHTML + shopHTML;
 
-  // Seed follow-up chat with pairings context
+  // Seed per-card chat contexts for each pairing
+  const wardrobeDesc = state.garments.map(g =>
+    [g.name, g.category ? CATEGORIES[g.category] : '', g.color, g.fabric].filter(Boolean).join(', ')
+  ).join('\n');
+  parsed.forEach((p, i) => {
+    const context = `Pairing for anchor "${anchorName}".\nOutfit: ${p.title}\nItems: ${p.items}\nScore: ${p.score}/10\nTuck: ${p.tuck}\nTo make it a 10: ${(p.to10||[]).join('; ')}\n\nFull wardrobe:\n${wardrobeDesc}`;
+    cardChatContexts[`pairing-chat-${i}`] = { context, history: [] };
+  });
+
+  // Also seed the shared pairings follow-up chat (for backward compat)
   initPairingsChat(text, anchorName);
 
   // Fetch OG metadata for shop cards asynchronously
@@ -1878,6 +1868,96 @@ async function fetchShopOG(query, linkId, placeholderId, footerId, titleId) {
     placeholderEl.style.display = 'none';
     footerEl.style.display = 'flex';
   }
+}
+
+// ─── Per-card follow-up chat ──────────────────────────────────
+const cardChatContexts = {}; // chatId -> { context, history, busy }
+
+function handleCardChatKey(e, chatId) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCardFollowUp(chatId); }
+}
+
+async function sendCardFollowUp(chatId) {
+  const cs       = cardChatContexts[chatId];
+  const inputEl  = document.getElementById(`${chatId}-input`);
+  const histEl   = document.getElementById(`${chatId}-history`);
+  if (!cs || !inputEl || !histEl) return;
+  const question = inputEl.value.trim();
+  if (!question || cs.busy || !state.apiKey) return;
+
+  cs.busy = true;
+  inputEl.value = ''; inputEl.style.height = 'auto';
+
+  // User bubble
+  const userDiv = document.createElement('div');
+  userDiv.className = 'chat-bubble user';
+  userDiv.textContent = question;
+  histEl.appendChild(userDiv);
+
+  // AI bubble
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'chat-bubble ai streaming';
+  aiDiv.textContent = '…';
+  histEl.appendChild(aiDiv);
+  aiDiv.scrollIntoView({ block: 'nearest' });
+
+  cs.history.push({ role: 'user', content: question });
+
+  const messages = [
+    { role: 'user', content: cs.context },
+    { role: 'assistant', content: 'Understood — I have the full context of this outfit recommendation. Ask me anything.' },
+    ...cs.history
+  ];
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 400,
+        stream: true,
+        system: 'You are a personal stylist assistant. Answer follow-up questions concisely about the specific outfit recommendation provided. Keep answers under 120 words. Be warm and direct.',
+        messages
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const reader = res.body.getReader(), decoder = new TextDecoder();
+    let full = '';
+    aiDiv.textContent = '';
+    aiDiv.classList.remove('streaming');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      for (const line of decoder.decode(value).split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6);
+        if (raw === '[DONE]') continue;
+        try {
+          const p = JSON.parse(raw);
+          if (p.type === 'content_block_delta' && p.delta?.text) {
+            full += p.delta.text;
+            aiDiv.textContent = full;
+            aiDiv.scrollIntoView({ block: 'nearest' });
+          }
+        } catch {}
+      }
+    }
+    cs.history.push({ role: 'assistant', content: full });
+
+  } catch(err) {
+    aiDiv.textContent = 'Something went wrong. Try again.';
+  }
+
+  cs.busy = false;
 }
 
 // ─── Follow-up chat ───────────────────────────────────────────
@@ -2002,8 +2082,10 @@ function initPairingsChat(pairingsText, anchorName) {
     [g.name, g.category ? CATEGORIES[g.category] : '', g.color, g.fabric].filter(Boolean).join(', ')
   ).join('\n');
   cs.context = `You are reviewing these outfit pairings for the anchor item "${anchorName}":\n\n${pairingsText}\n\nThe user's full wardrobe:\n${wardrobeDesc}`;
-  document.getElementById('pairingsChatHistory').innerHTML = '';
-  document.getElementById('pairingsChatCard').style.display = 'block';
+  const histEl = document.getElementById('pairingsChatHistory');
+  const cardEl = document.getElementById('pairingsChatCard');
+  if (histEl) histEl.innerHTML = '';
+  if (cardEl) cardEl.style.display = 'block';
 }
 
 // ─── Outfit card body builder ────────────────────────────────
@@ -2063,6 +2145,35 @@ function buildOutfitCardBody(outfit) {
     ${to10HTML}`;
 }
 
+function buildOutfitCardHTML(outfit, rankLabel, wxBadge, cardIdx) {
+  const n          = parseInt(outfit.score, 10) || 0;
+  const scoreClass = n >= 8 ? 'score-high' : n >= 5 ? 'score-mid' : 'score-low';
+  const chatId     = `outfit-chat-${cardIdx}`;
+  return `
+    <div class="result-card">
+      <div class="result-header">
+        <div style="flex:1;">
+          <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim);font-weight:500;margin-bottom:4px;">${rankLabel}</div>
+          <div class="result-title">${escHtml(outfit.title || 'Outfit')}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
+          ${wxBadge ? `<div class="weather-badge">${escHtml(wxBadge)}</div>` : ''}
+          ${n ? `<div class="score-badge ${scoreClass}">${n}/10</div>` : ''}
+        </div>
+      </div>
+      ${buildOutfitCardBody(outfit)}
+      <div class="followup-section">
+        <div class="followup-label">Ask a follow-up</div>
+        <div class="chat-history" id="${chatId}-history"></div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="${chatId}-input" placeholder="Ask a question…" rows="1"
+            onkeydown="handleCardChatKey(event,'${chatId}')" oninput="autoResize(this)"></textarea>
+          <button class="chat-send-btn" onclick="sendCardFollowUp('${chatId}')" title="Send">➤</button>
+        </div>
+      </div>
+    </div>`;
+}
+
 // ─── AI outfit suggestion ─────────────────────────────────────
 async function getSuggestion() {
   if (state.loading || !state.apiKey) return;
@@ -2071,17 +2182,15 @@ async function getSuggestion() {
   const btn = document.getElementById('suggestBtn');
   btn.innerHTML = '<span class="spinner"></span>Styling your outfit…';
 
-  const rs      = document.getElementById('resultSection');
-  const rBody   = document.getElementById('resultBody');
-  const rTitle  = document.getElementById('resultTitle');
-  const rWx     = document.getElementById('resultWeather');
-  const rScore  = document.getElementById('resultScore');
-  const rPieces = document.getElementById('resultPieces');
+  const rs = document.getElementById('resultSection');
+  const firstCardEl   = document.getElementById('outfitFirstCard');
+  const extraCardsEl  = document.getElementById('outfitExtraCards');
 
   rs.style.display = 'block';
-  rTitle.textContent = 'Thinking…'; rBody.textContent = '';
-  rWx.style.display = 'none'; rScore.style.display = 'none'; rPieces.innerHTML = '';
-  document.getElementById('outfitExtraCards').innerHTML = '';
+  firstCardEl.innerHTML = `<div class="result-card" style="opacity:0.5;"><div class="result-title" style="font-family:var(--font-serif);font-size:18px;color:var(--accent-text);">Thinking…</div></div>`;
+  extraCardsEl.innerHTML = '';
+  const outfitChatCardEl = document.getElementById('outfitChatCard');
+  if (outfitChatCardEl) outfitChatCardEl.style.display = 'none';
 
   const wxCtx = state.weather
     ? `Current weather: ${state.weather.temp}°F (feels like ${state.weather.feels}°F), ${state.weather.cond}, wind ${state.weather.wind} mph, humidity ${state.weather.humidity}%.`
@@ -2232,45 +2341,22 @@ Each outfit must use a genuinely different combination of items. For "to10": 2-4
 
     // Normalize: support both array and legacy single object
     const outfits = Array.isArray(outfit) ? outfit : [outfit];
+    const wxBadge = state.weather ? `${state.weather.temp}°F · ${state.weather.cond}` : null;
 
-    // Weather badge (shared across all cards)
-    if (state.weather) {
-      rWx.textContent = `${state.weather.temp}°F · ${state.weather.cond}`;
-      rWx.style.display = 'block';
-    }
+    // Render all cards uniformly
+    firstCardEl.innerHTML  = buildOutfitCardHTML(outfits[0], '1st pick', wxBadge, 0);
+    extraCardsEl.innerHTML = outfits.slice(1).map((o, idx) =>
+      `<div style="margin-top:12px;">${buildOutfitCardHTML(o, idx === 0 ? '2nd pick' : '3rd pick', null, idx + 1)}</div>`
+    ).join('');
 
-    // Render first outfit into existing result card header
-    const first = outfits[0];
-    rTitle.textContent = first.title || 'Your outfit';
-    if (first.score) {
-      const n = parseInt(first.score, 10);
-      rScore.textContent = `${n}/10`;
-      rScore.className = 'score-badge ' + (n >= 8 ? 'score-high' : n >= 5 ? 'score-mid' : 'score-low');
-      rScore.style.display = 'block';
-    }
-    rBody.innerHTML = buildOutfitCardBody(first);
-    rPieces.innerHTML = '';
+    // Show follow-up chat
+    document.getElementById('outfitChatCard') && (document.getElementById('outfitChatCard').style.display = 'block');
 
-    // Render outfits 2 and 3 as additional cards after the first
-    const extraContainer = document.getElementById('outfitExtraCards');
-    extraContainer.innerHTML = outfits.slice(1).map((o, idx) => {
-      const rankLabel = idx === 0 ? '2nd' : '3rd';
-      const n = parseInt(o.score, 10);
-      const scoreClass = n >= 8 ? 'score-high' : n >= 5 ? 'score-mid' : 'score-low';
-      return `
-        <div class="result-card" style="margin-top:12px;">
-          <div class="result-header">
-            <div style="flex:1;">
-              <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim);font-weight:500;margin-bottom:4px;">${rankLabel} pick</div>
-              <div class="result-title">${escHtml(o.title || 'Outfit')}</div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
-              <div class="score-badge ${scoreClass}">${n}/10</div>
-            </div>
-          </div>
-          ${buildOutfitCardBody(o, idx + 1)}
-        </div>`;
-    }).join('');
+    // Seed per-card chat contexts
+    outfits.forEach((o, i) => {
+      const context = `Outfit ${i+1}: ${o.title}\nItems: ${(o.items||[]).join(', ')}\nScore: ${o.score}/10\nTuck: ${o.tuck}\nTo make it a 10: ${(o.to10||[]).join('; ')}`;
+      cardChatContexts[`outfit-chat-${i}`] = { context, history: [] };
+    });
 
     // Collect all shopping items across all outfits (deduplicated by name)
     const allShopItems = [];
@@ -2325,14 +2411,8 @@ Each outfit must use a genuinely different combination of items. For "to10": 2-4
     // Show cache clear button
     document.getElementById('outfitCacheSection').style.display = 'block';
 
-    // Seed follow-up chat with all 3 outfits as context
-    initOutfitChat(outfits.map((o, i) =>
-      `Outfit ${i+1}: ${o.title}\nItems: ${(o.items||[]).join(', ')}\nScore: ${o.score}/10\nTuck: ${o.tuck}\nTo make it a 10: ${(o.to10||[]).join('; ')}`
-    ).join('\n\n'));
-
   } catch(err) {
-    rTitle.textContent = 'Something went wrong';
-    rBody.textContent  = err.message || 'Could not reach the AI. Check your API key and connection.';
+    firstCardEl.innerHTML = `<div class="result-card"><div class="result-title" style="font-family:var(--font-serif);font-size:18px;color:var(--accent-text);">Something went wrong</div><div style="font-size:13px;color:var(--text-muted);margin-top:8px;">${escHtml(err.message || 'Could not reach the AI. Check your API key and connection.')}</div></div>`;
   }
 
   state.loading = false;
@@ -2428,7 +2508,7 @@ function updateShopListBadge() {
   const btn   = document.getElementById('tabShopBtn');
   const n     = list.length;
   if (badge) { badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none'; }
-  if (btn)   { btn.textContent = `🛒 Shopping${n > 0 ? ` (${n})` : ''}`; }
+  if (btn)   { btn.textContent = `🛒 Cart${n > 0 ? ` (${n})` : ''}`; }
 }
 function renderShoppingList() {
   const list     = loadShopList();
