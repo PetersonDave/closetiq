@@ -1658,7 +1658,7 @@ STRICT RULES:
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5',
+          model: 'claude-sonnet-4-5',
           max_tokens: 2200,
           messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: prompt }] }]
         })
@@ -2484,7 +2484,7 @@ Each outfit must use a genuinely different combination of items. For "to10": 2-4
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5',
+          model: 'claude-sonnet-4-5',
           max_tokens: 2200,
           messages: [{ role: 'user', content: [...imageBlocks, { type: 'text', text: promptText }] }]
         })
