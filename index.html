@@ -381,6 +381,17 @@ section + section { padding-top: 0; }
   font-size: 9px; color: var(--success); font-weight: 600;
 }
 
+/* Gender selector */
+.gender-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.gender-btn {
+  padding: 10px; background: var(--surface); border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 13px;
+  font-weight: 500; color: var(--text-muted); cursor: pointer;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.gender-btn:active { transform: scale(0.97); }
+.gender-btn.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent-text); }
+
 /* Style profile */
 .style-profile-input {
   width: 100%; background: var(--surface2); border: 0.5px solid var(--border);
@@ -850,7 +861,13 @@ section + section { padding-top: 0; }
     <!-- Style Profile -->
     <section>
       <div class="section-label">My style profile</div>
-      <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.6;">Describe your personal style, fit preferences, aesthetic, and any rules the AI should always follow. Injected into every recommendation.</p>
+
+      <div class="gender-row">
+        <button class="gender-btn" id="genderMens" onclick="selectGender('mens')">👔 Men's</button>
+        <button class="gender-btn" id="genderWomens" onclick="selectGender('womens')">👗 Women's</button>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-dim);margin:10px 0;line-height:1.6;">Describe your personal style, fit preferences, aesthetic, and any rules the AI should always follow. Injected into every recommendation.</p>
       <textarea class="style-profile-input" id="styleProfileInput"
         placeholder="e.g. I prefer slim or tailored fits. I lean toward a smart-casual European aesthetic. I avoid bright colors — mostly neutrals, navy, olive, and white. I work in a business-casual office. I prefer loafers and leather shoes over sneakers for most occasions."
         oninput="onStyleProfileChange()" rows="6"></textarea>
@@ -982,6 +999,7 @@ const LS_KEY_INSTALL     = 'closetiq_install_dismissed';
 const LS_KEY_SHOPLIST    = 'closetiq_shoplist_v1';
 const LS_KEY_REC_CACHE   = 'closetiq_rec_cache_v1';
 const LS_KEY_STYLE_PROFILE = 'closetiq_style_profile_v1';
+const LS_KEY_GENDER        = 'closetiq_gender_v1';
 const CACHE_TTL_MS       = 30 * 24 * 60 * 60 * 1000; // 30 days
 const MAX_IMAGES_TO_AI = 8;
 const COMPRESS_DIM     = 480;
@@ -1539,8 +1557,10 @@ async function getPairings(itemId) {
   });
 
   const styleProfile = loadStyleProfile();
-  const profileBlock = styleProfile
-    ? `\nPERSONAL STYLE PROFILE — always follow these rules:\n${styleProfile}\n`
+  const gender       = loadGender();
+  const genderLine   = gender ? `Shopping gender preference: ${gender === 'mens' ? "Men's" : "Women's"} clothing.\n` : '';
+  const profileBlock = (styleProfile || gender)
+    ? `\nPERSONAL STYLE PROFILE — always follow these rules:\n${genderLine}${styleProfile}\n`
     : '';
 
   const prompt = `You are a personal stylist. The user has selected one item and wants to find the best complete outfits built around it.
@@ -1750,7 +1770,7 @@ function renderPairings(text, anchorName) {
     ${shopItems.map((s, si) => {
       const itemId = `shop_${Date.now()}_${si}`;
       const alreadyAdded = loadShopList().find(i => i.name === s.item);
-      const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' clothing')}`;
+      const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' ' + (loadGender() === 'womens' ? "women's" : loadGender() === 'mens' ? "men's" : '') + ' clothing')}`;
       const pairTags = s.pairs.split(',').map(t => t.trim()).filter(Boolean)
         .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
       return `
@@ -1830,7 +1850,7 @@ async function fetchShopOG(query, linkId, placeholderId, footerId, titleId) {
   if (!linkEl || !placeholderEl || !footerEl || !titleEl) return;
 
   // Build Google Shopping search URL as the tap destination
-  const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query + ' clothing')}`;
+  const searchUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query + ' ' + (loadGender() === 'womens' ? "women's" : loadGender() === 'mens' ? "men's" : '') + ' clothing')}`;
 
   // Try to fetch OG metadata via allorigins proxy from a shopping search
   try {
@@ -2252,8 +2272,10 @@ async function getSuggestion() {
   const todCtx     = state.tod     ? ` (${state.tod.toLowerCase()})` : '';
   const settingCtx = state.setting ? ` at a ${state.setting}` : '';
   const styleProfile = loadStyleProfile();
-  const profileBlock = styleProfile
-    ? `\nPERSONAL STYLE PROFILE — always follow these rules:\n${styleProfile}\n`
+  const gender       = loadGender();
+  const genderLine   = gender ? `Shopping gender preference: ${gender === 'mens' ? "Men's" : "Women's"} clothing.\n` : '';
+  const profileBlock = (styleProfile || gender)
+    ? `\nPERSONAL STYLE PROFILE — always follow these rules:\n${genderLine}${styleProfile}\n`
     : '';
   const promptText = `You are a personal stylist building a complete outfit for: ${state.occasion}${todCtx}${settingCtx}.
 
@@ -2376,7 +2398,7 @@ Each outfit must use a genuinely different combination of items. For "to10": 2-4
         ${allShopItems.map((s, si) => {
           const itemId     = `ofit_${Date.now()}_${si}`;
           const alreadyAdded = loadShopList().find(i => i.name === s.item);
-          const searchUrl  = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' clothing')}`;
+          const searchUrl  = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(s.item + ' ' + (loadGender() === 'womens' ? "women's" : loadGender() === 'mens' ? "men's" : '') + ' clothing')}`;
           const pairTags   = (s.pairs || '').split(',').map(t => t.trim()).filter(Boolean)
             .map(t => `<span class="shop-pair-tag">${escHtml(t)}</span>`).join('');
           return `
@@ -2524,7 +2546,7 @@ function renderShoppingList() {
   grid.style.display  = n > 0 ? 'block' : 'none';
 
   grid.innerHTML = list.map((item, idx) => {
-    const searchUrl = item.searchUrl || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent((item.name || '') + ' clothing')}`;
+    const searchUrl = item.searchUrl || `https://www.google.com/search?tbm=shop&q=${encodeURIComponent((item.name || '') + ' ' + (loadGender() === 'womens' ? "women's" : loadGender() === 'mens' ? "men's" : '') + ' clothing')}`;
     const linkContent = item.imgSrc
       ? `<img class="shop-list-img" src="${escHtml(item.imgSrc)}" alt="${escHtml(item.name)}" loading="lazy" onerror="this.style.display='none'">
          <div class="shop-product-link-footer">
@@ -2579,10 +2601,20 @@ function clearShoppingList() {
 function loadStyleProfile() {
   return localStorage.getItem(LS_KEY_STYLE_PROFILE) || '';
 }
+function loadGender() {
+  return localStorage.getItem(LS_KEY_GENDER) || '';
+}
+function selectGender(g) {
+  localStorage.setItem(LS_KEY_GENDER, g);
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById(g === 'mens' ? 'genderMens' : 'genderWomens');
+  if (el) el.classList.add('active');
+  onStyleProfileChange();
+}
 function saveStyleProfile() {
   const val = (document.getElementById('styleProfileInput')?.value || '').trim();
   localStorage.setItem(LS_KEY_STYLE_PROFILE, val);
-  cacheClearAll(); // profile change invalidates all cached recommendations
+  cacheClearAll();
   document.getElementById('profileSaveStatus').textContent = '✓ Saved — cache cleared';
   document.getElementById('profileSaveStatus').style.color = 'var(--success)';
   showToast('Style profile saved — recommendations refreshed');
@@ -2594,10 +2626,16 @@ function onStyleProfileChange() {
 function initStyleProfileUI() {
   const ta  = document.getElementById('styleProfileInput');
   const val = loadStyleProfile();
+  const g   = loadGender();
   if (ta) {
     ta.value = val;
     document.getElementById('profileSaveStatus').textContent = val ? '✓ Profile saved' : 'Not saved';
     document.getElementById('profileSaveStatus').style.color = val ? 'var(--success)' : 'var(--text-dim)';
+  }
+  if (g) {
+    document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById(g === 'mens' ? 'genderMens' : 'genderWomens');
+    if (el) el.classList.add('active');
   }
 }
 
@@ -2650,14 +2688,16 @@ function buildOutfitCacheKey() {
   const prefsStr   = JSON.stringify(state.stylePrefs);
   const anchorsStr = JSON.stringify(state.anchors);
   const profile    = loadStyleProfile();
-  const str = [wardrobeFingerprint, state.occasion, state.tod, state.setting, prefsStr, anchorsStr, profile].join('|');
+  const gender     = loadGender();
+  const str = [wardrobeFingerprint, state.occasion, state.tod, state.setting, prefsStr, anchorsStr, profile, gender].join('|');
   return 'outfit_' + simpleHash(str);
 }
 
 function buildPairingsCacheKey(anchorId) {
   const wardrobeFingerprint = [...state.garments].sort((a,b) => a.id.localeCompare(b.id)).map(g => g.id).join(',');
   const profile = loadStyleProfile();
-  const str = [anchorId, wardrobeFingerprint, state.occasion, state.tod, state.setting, profile].join('|');
+  const gender  = loadGender();
+  const str = [anchorId, wardrobeFingerprint, state.occasion, state.tod, state.setting, profile, gender].join('|');
   return 'pairs_' + simpleHash(str);
 }
 
